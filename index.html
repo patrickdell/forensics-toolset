@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Forensics Toolset</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="style.css">
+  <!-- ExifReader for metadata extraction -->
+  <script src="https://cdn.jsdelivr.net/npm/exifreader@4/dist/exif-reader.min.js"></script>
+  <!-- piexifjs for metadata injection (lazy-loaded in strip.js) -->
+  <script src="https://cdn.jsdelivr.net/npm/piexifjs@1/piexif.js"></script>
+</head>
+<body>
+
+<!-- Header & Navigation -->
+<header class="app-header">
+  <h1 class="app-title">Forensics Toolset</h1>
+  <nav class="tabs">
+    <button class="tab-btn" data-tab="meta">Metadata</button>
+    <button class="tab-btn" data-tab="ela">ELA</button>
+    <button class="tab-btn" data-tab="clone">Clone</button>
+    <button class="tab-btn" data-tab="strip">Strip</button>
+    <button class="tab-btn" data-tab="report">Report</button>
+  </nav>
+  <button class="header-icon-btn" id="wizard-btn" title="Guided Analysis">🧭 Guided</button>
+  <button class="header-icon-btn" id="about-btn" title="About & License">?</button>
+  <button class="nav-hamburger" id="nav-hamburger" aria-label="Open tools menu">☰</button>
+  <span class="privacy-note">All processing happens in your browser</span>
+</header>
+
+<!-- Mobile Navigation Drawer -->
+<nav class="nav-drawer" id="nav-drawer" style="display:none">
+  <button class="drawer-tab-btn" data-tab="meta">Metadata</button>
+  <button class="drawer-tab-btn" data-tab="ela">ELA</button>
+  <button class="drawer-tab-btn" data-tab="clone">Clone Detection</button>
+  <button class="drawer-tab-btn" data-tab="strip">Metadata Stripper</button>
+  <button class="drawer-tab-btn" data-tab="report">Report</button>
+  <hr style="border:none; border-top:1px solid var(--line); margin:1rem 0">
+  <button class="drawer-tab-btn" data-about>About & License</button>
+</nav>
+
+<!-- Image Loader (Persistent, shown above all panels) -->
+<div id="fts-loader" class="fts-loader">
+  <div id="fts-dropzone" class="dropzone card fts-dropzone">
+    <div style="text-align:center; padding:2rem">
+      <div style="font-size:2.5rem; margin-bottom:1rem">📷</div>
+      <p style="font-size:1.1rem; font-weight:500; margin:0 0 0.5rem">Drop an image to begin</p>
+      <p style="color:var(--muted); margin:0 0 1.5rem; font-size:0.95rem">
+        Supports JPEG, PNG, WebP • Max 50 MB
+      </p>
+      <button class="export-btn-secondary" id="fts-browse-btn">Browse files</button>
+    </div>
+    <input id="fts-file-input" type="file" accept="image/*" hidden />
+  </div>
+  <div id="fts-loaded-bar" class="fts-loaded-bar" style="display:none">
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:1rem">
+      <div>
+        <span id="fts-loaded-name" style="font-weight:500"></span>
+        <span id="fts-loaded-dims" style="color:var(--muted); font-size:0.9rem; margin-left:1rem"></span>
+      </div>
+      <button class="export-btn-secondary" id="fts-load-new-btn">Load different image</button>
+    </div>
+  </div>
+</div>
+
+<!-- Wizard Overlay (Hidden by default) -->
+<div id="wizard-overlay" class="wizard-overlay" style="display:none">
+  <div class="wizard-header">
+    <span class="wizard-step-label" id="wizard-step-label">Step 1 of 4: Metadata</span>
+    <div class="wizard-step-dots" id="wizard-dots">
+      <span class="dot active"></span>
+      <span class="dot"></span>
+      <span class="dot"></span>
+      <span class="dot"></span>
+    </div>
+    <button class="text-btn" id="wizard-exit">Exit</button>
+  </div>
+  <div class="wizard-body" id="wizard-body">
+    <!-- Active panel content cloned here -->
+  </div>
+  <div class="wizard-footer">
+    <button class="export-btn-secondary" id="wizard-skip">Skip</button>
+    <button class="export-btn" id="wizard-next">Continue →</button>
+  </div>
+</div>
+
+<!-- Main Content Panels -->
+<main id="panels-container" class="panels-container">
+
+  <!-- Panel: Metadata -->
+  <section id="panel-meta" class="panel visible">
+    <h2>Metadata Extraction & Forensic Flags</h2>
+
+    <div class="tool-explain-wrap">
+      <button class="tool-explain-toggle" data-target="meta-explain">
+        ⓘ About this analysis
+      </button>
+      <div id="meta-explain" class="tool-explain" style="display:none">
+        <p>
+          This tool extracts forensically relevant metadata from the image file, including EXIF, IPTC, and XMP data.
+          It checks for signs of editing, AI generation, and timestamp inconsistencies.
+        </p>
+        <p>
+          <strong>Important:</strong> Metadata can be added, removed, or modified without affecting pixel content,
+          and is routinely stripped or altered by social media platforms, messaging apps, and image editors.
+          Its presence or absence does not prove or disprove authenticity.
+        </p>
+      </div>
+    </div>
+
+    <div id="meta-flags" class="meta-flags" style="display:none">
+      <h3 style="margin-top:0">Forensic Flags</h3>
+      <div id="meta-flags-list"></div>
+    </div>
+
+    <div id="meta-fields" class="meta-fields" style="display:none">
+      <h3>Key Metadata Fields</h3>
+      <table class="meta-table" id="meta-table"></table>
+
+      <div id="meta-all-fields-wrap" style="margin-top:1.5rem">
+        <button class="text-btn" id="meta-all-fields-toggle">
+          Show all fields
+        </button>
+        <table class="meta-table" id="meta-all-table" style="display:none; margin-top:1rem"></table>
+      </div>
+    </div>
+
+    <div id="meta-status" class="fts-notice" style="display:none">
+      <strong>No image loaded.</strong> Drop or browse to begin.
+    </div>
+  </section>
+
+  <!-- Panel: ELA -->
+  <section id="panel-ela" class="panel">
+    <h2>Error Level Analysis (ELA)</h2>
+
+    <div class="tool-explain-wrap">
+      <button class="tool-explain-toggle" data-target="ela-explain">
+        ⓘ About this analysis
+      </button>
+      <div id="ela-explain" class="tool-explain" style="display:none">
+        <p>
+          ELA detects JPEG compression artifacts by re-saving the image and measuring pixel differences.
+          Areas with high variation may indicate edited or composited regions.
+        </p>
+        <p>
+          <strong>What ELA shows:</strong> Areas of re-saved content, local edits, or sharp boundaries.
+        </p>
+        <p>
+          <strong>What ELA does NOT show:</strong> Text, sharp graphics, and textured regions (fabric, foliage)
+          naturally show high variation. Repeated saves at the same quality, resizes, and crops also produce variation.
+        </p>
+        <p>
+          ELA is one indicator among many and should never be used in isolation.
+        </p>
+      </div>
+    </div>
+
+    <div id="ela-controls" style="display:none">
+      <div class="control-group">
+        <label>Quality</label>
+        <div class="chips" id="ela-quality-chips">
+          <button class="chip" data-quality="75">75</button>
+          <button class="chip" data-quality="90">90</button>
+          <button class="chip" data-quality="95">95</button>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <label>Amplification</label>
+        <div class="chips" id="ela-amp-chips">
+          <button class="chip" data-amp="5">5×</button>
+          <button class="chip" data-amp="10">10×</button>
+          <button class="chip" data-amp="15">15×</button>
+          <button class="chip" data-amp="20">20×</button>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <label>Display</label>
+        <div class="chips" id="ela-display-chips">
+          <button class="chip" data-display="ela-only">ELA only</button>
+          <button class="chip" data-display="side-by-side">Side-by-side</button>
+          <button class="chip" data-display="overlay">Overlay</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="ela-non-jpeg-warn" class="fts-warn" style="display:none">
+      <strong>⚠️ Non-JPEG image detected.</strong> ELA is designed for JPEG images. Re-saving as JPEG introduces
+      compression where none existed, so high variation appears everywhere. Results shown for reference only.
+    </div>
+
+    <div id="ela-canvas-wrap" class="fts-canvas-wrap" style="display:none">
+      <canvas id="ela-canvas"></canvas>
+    </div>
+
+    <div id="ela-status" class="fts-notice" style="display:none">
+      <strong>No image loaded.</strong> Drop or browse to begin.
+    </div>
+  </section>
+
+  <!-- Panel: Clone Detection -->
+  <section id="panel-clone" class="panel">
+    <h2>Clone Detection</h2>
+
+    <div class="tool-explain-wrap">
+      <button class="tool-explain-toggle" data-target="clone-explain">
+        ⓘ About this analysis
+      </button>
+      <div id="clone-explain" class="tool-explain" style="display:none">
+        <p>
+          Clone (copy-move) detection identifies similar regions at different positions in the image,
+          which may indicate content duplication or forgery.
+        </p>
+        <p>
+          <strong>Limitations:</strong> Rotation and scaling are only partially detected. Smooth areas (sky, walls)
+          generate noise especially at high sensitivity. The algorithm does not detect content-aware fill or AI inpainting.
+        </p>
+      </div>
+    </div>
+
+    <div id="clone-controls" style="display:none">
+      <div class="control-group">
+        <label>Sensitivity</label>
+        <div class="chips" id="clone-sensitivity-chips">
+          <button class="chip" data-sensitivity="low">Low</button>
+          <button class="chip" data-sensitivity="medium">Medium</button>
+          <button class="chip" data-sensitivity="high">High</button>
+        </div>
+      </div>
+
+      <div id="clone-size-warn" class="fts-warn" style="display:none">
+        <strong>⚠️ Large image.</strong> Analysis may take 30–60 seconds.
+        <label style="display:block; margin-top:0.5rem">
+          <input type="checkbox" id="clone-scale-checkbox" />
+          Analyse at 50% scale for speed
+        </label>
+      </div>
+
+      <button class="export-btn" id="clone-analyse-btn" style="display:none">
+        Analyse
+      </button>
+    </div>
+
+    <div id="clone-progress-wrap" style="display:none; margin:1rem 0">
+      <div class="progress-bar-bg">
+        <div class="progress-bar" id="clone-progress-bar" style="width:0%"></div>
+      </div>
+      <p id="clone-progress-text" style="margin:0.5rem 0 0; color:var(--muted); font-size:0.9rem">
+        Analysing…
+      </p>
+    </div>
+
+    <div id="clone-canvas-wrap" class="fts-canvas-wrap" style="display:none">
+      <canvas id="clone-canvas"></canvas>
+      <p id="clone-result-text" style="margin:0.5rem 0 0; color:var(--muted); font-size:0.9rem"></p>
+    </div>
+
+    <div id="clone-status" class="fts-notice" style="display:none">
+      <strong>No image loaded.</strong> Drop or browse to begin.
+    </div>
+  </section>
+
+  <!-- Panel: Strip -->
+  <section id="panel-strip" class="panel">
+    <h2>Metadata Stripper</h2>
+
+    <div class="tool-explain-wrap">
+      <button class="tool-explain-toggle" data-target="strip-explain">
+        ⓘ About this analysis
+      </button>
+      <div id="strip-explain" class="tool-explain" style="display:none">
+        <p>
+          This tool removes metadata from images to protect privacy and prepare files for sharing.
+          Choose how much metadata to preserve.
+        </p>
+      </div>
+    </div>
+
+    <div id="strip-controls" style="display:none">
+      <fieldset class="strip-options">
+        <legend style="font-weight:500; margin-bottom:1rem">Metadata handling</legend>
+
+        <label class="strip-option">
+          <input type="radio" name="strip-mode" value="all" checked />
+          <span style="font-weight:500">Strip everything</span>
+          <span style="display:block; color:var(--muted); font-size:0.9rem; margin-top:0.25rem">
+            Canvas re-encode only, zero metadata
+          </span>
+        </label>
+
+        <label class="strip-option">
+          <input type="radio" name="strip-mode" value="keep-date" />
+          <span style="font-weight:500">Keep date & time</span>
+          <span style="display:block; color:var(--muted); font-size:0.9rem; margin-top:0.25rem">
+            Strip all other metadata, preserve original capture timestamp
+          </span>
+        </label>
+
+        <label class="strip-option">
+          <input type="radio" name="strip-mode" value="keep-copyright" />
+          <span style="font-weight:500">Keep copyright info</span>
+          <span style="display:block; color:var(--muted); font-size:0.9rem; margin-top:0.25rem">
+            Strip GPS and device info, preserve artist/copyright/byline fields
+          </span>
+        </label>
+      </fieldset>
+
+      <div class="control-group" style="margin-top:1.5rem">
+        <label for="strip-quality-slider">JPEG Quality</label>
+        <div style="display:flex; gap:1rem; align-items:center">
+          <input type="range" id="strip-quality-slider" min="70" max="100" value="92" style="flex:1" />
+          <span id="strip-quality-value" style="font-weight:500; min-width:2rem">92</span>
+        </div>
+      </div>
+
+      <button class="export-btn" id="strip-export-btn" style="margin-top:1rem">
+        Strip & Download
+      </button>
+    </div>
+
+    <div id="strip-before-after" style="display:none; margin:1rem 0">
+      <p style="color:var(--muted); font-size:0.9rem">
+        <span id="strip-before-count"></span> →
+        <span id="strip-after-count"></span>
+      </p>
+    </div>
+
+    <div id="strip-status" class="fts-notice" style="display:none">
+      <strong>No image loaded.</strong> Drop or browse to begin.
+    </div>
+  </section>
+
+  <!-- Panel: Report -->
+  <section id="panel-report" class="panel">
+    <h2>Forensic Report</h2>
+
+    <div class="tool-explain-wrap">
+      <button class="tool-explain-toggle" data-target="report-explain">
+        ⓘ About this report
+      </button>
+      <div id="report-explain" class="tool-explain" style="display:none">
+        <p>
+          This report compiles findings from all completed analyses into a printable document.
+          The report is generated client-side and can be saved as a PDF via your browser's print function.
+        </p>
+        <p>
+          <strong>Disclaimer:</strong> This report is an automated analysis to assist human review.
+          Findings are indicators only and must be interpreted by a qualified analyst.
+        </p>
+      </div>
+    </div>
+
+    <div id="report-status" style="display:none">
+      <h3>Analysis Status</h3>
+      <div id="report-checklist" style="display:flex; flex-direction:column; gap:0.5rem"></div>
+    </div>
+
+    <div id="report-preview" style="display:none; margin-top:1.5rem; padding:1.5rem; background:var(--code-bg); border-radius:var(--radius); border:1px solid var(--line)">
+      <h3 style="margin-top:0">Report Preview</h3>
+      <div id="report-content" style="font-size:0.9rem; line-height:1.6; color:var(--ink)"></div>
+      <button class="export-btn" id="report-print-btn" style="margin-top:1rem">
+        🖨️ Print to PDF
+      </button>
+    </div>
+
+    <div id="report-empty" class="fts-notice">
+      <strong>No analyses completed yet.</strong> Run the Metadata, ELA, Clone, and/or Strip tools above,
+      then return here to generate a report.
+    </div>
+  </section>
+
+</main>
+
+<!-- About Modal -->
+<div id="about-modal" class="about-modal" style="display:none">
+  <div class="about-modal-content">
+    <div class="about-modal-header">
+      <h2 style="margin:0">Forensics Toolset</h2>
+      <button class="about-modal-close" id="about-close-btn">✕</button>
+    </div>
+    <div class="about-modal-body">
+      <p>
+        A privacy-first collection of forensic image analysis tools. Every operation runs entirely
+        in your browser — nothing is uploaded to any server.
+      </p>
+
+      <h3>Licence</h3>
+      <p>
+        Copyright © 2026 Patrick Dell. Free for personal, educational, and non-commercial use.
+      </p>
+      <p>
+        This tool is intended to assist analysis, not replace it. Findings should always be reviewed
+        by a qualified professional. Use of this tool for harassment, harassment, or illegal purposes
+        is prohibited.
+      </p>
+
+      <h3>Links</h3>
+      <ul style="margin:0; padding-left:1.5rem">
+        <li><a href="https://visuals-toolset.pages.dev" target="_blank" rel="noopener">Visuals Toolset</a></li>
+        <li><a href="https://github.com/patrickdell/forensics-toolset" target="_blank" rel="noopener">Source Code</a></li>
+        <li><a href="https://patrickdell.ca" target="_blank" rel="noopener">patrickdell.ca</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="about-modal-backdrop" id="about-backdrop"></div>
+</div>
+
+<!-- Scripts -->
+<script type="module" src="app.js"></script>
+
+</body>
+</html>
