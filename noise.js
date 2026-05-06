@@ -153,10 +153,15 @@ async function runNoiseAnalysis() {
     ctx.putImageData(heatmapData, 0, 0);
 
     // Store result
+    let maxResidual = 0;
+    for (let i = 0; i < residuals.length; i++) {
+      if (residuals[i] > maxResidual) maxResidual = residuals[i];
+    }
+
     results.noise = {
       canvas: canvas.toDataURL(),
       amplification: noiseAmplification,
-      maxResidual: Math.max(...residuals),
+      maxResidual,
     };
 
     // Dispatch completion event for report
