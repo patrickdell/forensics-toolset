@@ -66,6 +66,10 @@ ela.js                  Error Level Analysis (re-encode diff + false-colour heat
 clone.js                Clone detection coordinator + result rendering
 clone.worker.js         Web Worker — block feature extraction + K-nearest-neighbour match
 strip.js                Metadata stripping with keep-date / keep-copyright options
+noise.js                Noise residual analyzer (median filter comparison)
+shadow.js               Shadow & light vector plotter (interactive vector drawing)
+redactor.js             Redaction reversibility checker (blur/pixelation/swirl detection)
+pivot.js                Reverse image search pivot board (Google Lens, TinEye, Yandex, Baidu)
 report.js               Compile findings → window.print() PDF
 
 ── Utilities ──
@@ -268,6 +272,47 @@ results.ela.canvas = canvas.toDataURL();
 - JPEG quality slider: 70–100 (default 92)
 - Shows before/after field counts
 
+### Noise Residual Analyzer (noise.js)
+
+- Detects compression artifacts and noise patterns via median filter
+- Algorithm: 3×3 median filter on greyscale image, per-pixel residual = |pixel − median|
+- Amplification chips: 1× (default), 2×, 3×, 5× to adjust visibility of faint noise
+- False-colour heatmap: blue (low residuals) → green → yellow → red (high residuals)
+- Heatmap overlaid at 50% opacity on original image
+- Auto-runs on image load; changes to amplification re-run immediately
+- Stores result in `results.noise` for report
+
+### Shadow & Light Vector Plotter (shadow.js)
+
+- Interactive canvas tool for drawing and measuring light vectors
+- Draw vectors by clicking and dragging on the image canvas
+- Each vector displays: angle (degrees), distance (pixels)
+- Undo last vector or clear all vectors
+- Export annotated canvas as PNG
+- Stores vectors array with startX, startY, endX, endY, angle, distance
+
+### Redaction Reversibility Checker (redactor.js)
+
+- Detects blur, pixelation, and swirl artifacts that indicate redacted regions
+- Three detection modes: blur, pixelation, swirl
+- Algorithm: analyzes 16×16 blocks with 8px stride overlap for coverage
+- Blur detection: low variance = blur (smooth gradients indicate artificial blurring)
+- Pixelation detection: reduced unique colors (fewer distinct colors = pixelated)
+- Swirl detection: unusual gradient patterns from rotational artifacts
+- Confidence scoring: 0–1 scale, blocks with score > 0.6 marked as suspicious
+- Clustering: nearby blocks grouped into regions with bounding boxes
+- False-colour heatmap: blue (low confidence) → green → yellow → red (high confidence)
+- Stores result in `results.redactor` for report
+
+### Pivot / Reverse Image Search (pivot.js)
+
+- Generates one-click search links to reverse image search engines
+- Supported services: Google Lens, TinEye, Yandex, Baidu
+- Converts image to blob or data URL locally (no upload)
+- Each search button opens the service in a new tab with the image
+- Non-JPEG formats are converted to JPEG via canvas (quality 92%)
+- Module state: none (pure utility)
+
 ### Report (report.js)
 
 - Compiles findings from all completed analyses
@@ -295,11 +340,26 @@ be reviewed by a qualified professional.
 5. Clone tab: click Analyse → progress bar runs, result shows on completion
 6. Clone tab: large image (>2MP) → size warning appears
 7. Clone tab: load 3 images in sequence → clicking Analyse only fires once per click
-8. Strip tab: strip all → download JPEG, metadata reduced to zero
-9. Strip tab: keep date → downloaded file has DateTimeOriginal, no GPS
-10. Report tab: all analyses complete → report shows all findings sections
-11. Report tab: click Print → new window opens, PDF preview renders
-12. Wizard: click 🧭 → overlay appears, steps advance, explanations open by default
-13. Wizard: Exit wizard → tabs visible, results still shown
-14. Resize to 480px → hamburger menu appears, nav drawer works
-15. localStorage persistence: refresh → same tab active, explanation toggles same state
+8. Noise tab: load image → heatmap renders automatically with amplification chips visible
+9. Noise tab: change amplification chip → heatmap updates immediately (blue → red gradient)
+10. Noise tab: textured regions (fabric, foliage) show higher noise residuals (more red)
+11. Shadow tab: load image → canvas shows with controls
+12. Shadow tab: click and drag on canvas → vector drawn with arrowhead
+13. Shadow tab: click vector → vector selected (highlighted), updates list
+14. Shadow tab: click Delete → vector removed; click Clear All → all vectors cleared
+15. Shadow tab: click Export → downloads PNG with vectors overlaid
+16. Redaction tab: load image → canvas shows with Blur/Pixelation/Swirl chips
+17. Redaction tab: select Blur → analyzes image, heatmap appears with detected regions
+18. Redaction tab: change mode → analysis re-runs with new detection method
+19. Redaction tab: results show detected region count + list with confidence scores
+20. Pivot tab: load image → 4 search buttons appear (Google Lens, TinEye, Yandex, Baidu)
+21. Pivot tab: click any button → opens in new tab with image data
+22. Strip tab: strip all → download JPEG, metadata reduced to zero
+23. Strip tab: keep date → downloaded file has DateTimeOriginal, no GPS
+24. Report tab: all analyses complete → report shows all findings sections
+25. Report tab: report includes redaction detection results if available
+26. Report tab: click Print → new window opens, PDF preview renders with all heatmaps
+27. Wizard: click 🧭 → overlay appears, steps advance, explanations open by default
+28. Wizard: Exit wizard → tabs visible, results still shown
+29. Resize to 480px → hamburger menu appears, nav drawer works, all tools visible
+30. localStorage persistence: refresh → same tab active, explanation toggles same state

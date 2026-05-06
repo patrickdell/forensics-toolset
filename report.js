@@ -42,8 +42,10 @@ export function initReport() {
   document.addEventListener('fts:loaded', updateReportStatus);
   document.addEventListener('fts:meta:complete', updateReportStatus);
   document.addEventListener('fts:ela:complete', updateReportStatus);
+  document.addEventListener('fts:noise:complete', updateReportStatus);
   document.addEventListener('fts:clone:complete', updateReportStatus);
   document.addEventListener('fts:strip:complete', updateReportStatus);
+  document.addEventListener('fts:redactor:complete', updateReportStatus);
 }
 
 function updateReportStatus() {
@@ -56,8 +58,10 @@ function updateReportStatus() {
   const completed = {
     Metadata: !!results.meta,
     ELA: !!results.ela,
+    'Noise Analysis': !!results.noise,
     'Clone Detection': !!results.clone,
     'Metadata Stripper': !!results.strip,
+    'Redaction Detection': !!results.redactor,
   };
 
   const anyComplete = Object.values(completed).some(v => v);
@@ -139,6 +143,19 @@ function generateReportHTML() {
     `;
   }
 
+  // Noise analysis
+  if (results.noise && results.noise.canvas) {
+    html += `
+      <h2>Noise Residual Analysis</h2>
+      <p><strong>Amplification:</strong> ${results.noise.amplification}×</p>
+      <img src="${results.noise.canvas}" alt="Noise residual heatmap" style="max-width:100%; height:auto;" />
+      <p style="color:#666; font-size:0.9em;">
+        <em>Blue regions have low noise residuals (smooth areas), transitioning to red for high residuals (textured, compressed, or edited regions).
+        This analysis should be combined with other forensic indicators.</em>
+      </p>
+    `;
+  }
+
   // Clone detection
   if (results.clone && results.clone.canvas) {
     html += `
@@ -158,6 +175,20 @@ function generateReportHTML() {
       <h2>Metadata Stripping</h2>
       <p><strong>Mode:</strong> ${results.strip.mode}</p>
       <p>${results.strip.beforeCount} fields → ${results.strip.afterCount} fields</p>
+    `;
+  }
+
+  // Redaction detection
+  if (results.redactor && results.redactor.canvas) {
+    html += `
+      <h2>Redaction Reversibility Analysis</h2>
+      <p><strong>Mode:</strong> ${results.redactor.mode} detection</p>
+      <p><strong>Regions detected:</strong> ${results.redactor.detectedRegions.length}</p>
+      <img src="${results.redactor.canvas}" alt="Redaction heatmap" style="max-width:100%; height:auto;" />
+      <p style="color:#666; font-size:0.9em;">
+        <em>Detected regions are shown as overlays with bounding boxes. Red indicates high confidence in artifacts,
+        yellow/green indicates lower confidence. This analysis detects blur, pixelation, and swirl artifacts.</em>
+      </p>
     `;
   }
 

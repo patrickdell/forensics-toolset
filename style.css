@@ -732,6 +732,114 @@ input[type=range]::-moz-range-thumb {
 .footer-links a:hover { color: var(--ink); text-decoration: none; }
 .footer-sep { color: var(--line); }
 
+/* ── Shadow vector plotter ────────────────────────────────────────────────── */
+.shadow-vector-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.shadow-vector-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: var(--card2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background .15s, border-color .15s;
+}
+.shadow-vector-item:hover { background: var(--card); border-color: var(--accent); }
+.shadow-vector-item.selected { background: var(--accent); border-color: var(--accent); }
+.shadow-vector-item.selected .shadow-vector-info { color: #fff; }
+.shadow-vector-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.shadow-vector-label { font-weight: 600; color: var(--ink); }
+.shadow-vector-angle, .shadow-vector-distance {
+  font-family: 'SF Mono', 'Fira Mono', monospace;
+  font-size: 11px;
+}
+.shadow-vector-delete {
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 3px;
+  transition: color .15s;
+}
+.shadow-vector-delete:hover { color: var(--danger); }
+
+/* ── Redaction reversibility checker ────────────────────────────────────── */
+.redactor-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.redactor-region-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  background: var(--card2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  transition: background .15s, border-color .15s;
+}
+.redactor-region-item:hover { background: var(--card); border-color: var(--accent); }
+.redactor-region-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.redactor-region-label { font-weight: 600; color: var(--ink); }
+.redactor-region-size, .redactor-region-confidence {
+  font-family: 'SF Mono', 'Fira Mono', monospace;
+  font-size: 11px;
+}
+
+/* ── Pivot / Reverse image search ──────────────────────────────────────── */
+.pivot-links {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.pivot-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 18px 16px;
+  background: var(--card2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  color: var(--ink);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.pivot-btn:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.pivot-icon { font-size: 2rem; }
+.pivot-label { text-align: center; }
+
 /* ── Print ────────────────────────────────────────────────────────────────── */
 @media print {
   .app-header, .fts-loader, .wizard-overlay, .site-footer,

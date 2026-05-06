@@ -6,6 +6,10 @@ import { initMetadata } from './metadata.js';
 import { initELA }      from './ela.js';
 import { initClone }    from './clone.js';
 import { initStrip }    from './strip.js';
+import { initNoise }    from './noise.js';
+import { initShadow }   from './shadow.js';
+import { initRedactor } from './redactor.js';
+import { initPivot }    from './pivot.js';
 import { initReport }   from './report.js';
 import { setupDropzone } from './utils.js';
 
@@ -16,16 +20,20 @@ export const img = {
 };
 
 export const results = {
-  meta: null, ela: null, clone: null, strip: null,
+  meta: null, ela: null, noise: null, clone: null, strip: null, redactor: null,
 };
 
 // ── Panel routing ─────────────────────────────────────────────────────────────
 const panels = {
-  meta:   'panel-meta',
-  ela:    'panel-ela',
-  clone:  'panel-clone',
-  strip:  'panel-strip',
-  report: 'panel-report',
+  meta:     'panel-meta',
+  ela:      'panel-ela',
+  clone:    'panel-clone',
+  strip:    'panel-strip',
+  noise:    'panel-noise',
+  shadow:   'panel-shadow',
+  redactor: 'panel-redactor',
+  pivot:    'panel-pivot',
+  report:   'panel-report',
 };
 
 function setActivePanel(tabName) {
@@ -38,12 +46,12 @@ function setActivePanel(tabName) {
     btn.classList.toggle('active', btn.dataset.tab === tabName);
   });
   localStorage.setItem('fts_tab', tabName);
-  closeDrawer();
+  // Close drawer after it's initialized (see below)
+  if (typeof closeDrawer === 'function') closeDrawer();
 }
 
-// Restore saved tab
+// Restore saved tab (will be called after drawer is initialized)
 const savedTab = localStorage.getItem('fts_tab') || 'meta';
-setActivePanel(savedTab);
 
 document.querySelectorAll('.tab-btn[data-tab], .nav-drawer-item[data-tab]').forEach(btn => {
   btn.addEventListener('click', () => setActivePanel(btn.dataset.tab));
@@ -126,6 +134,9 @@ function closeDrawer() {
 document.getElementById('nav-hamburger').addEventListener('click', openDrawer);
 document.getElementById('nav-drawer-close').addEventListener('click', closeDrawer);
 backdrop.addEventListener('click', closeDrawer);
+
+// Now that drawer is initialized, restore the saved tab
+setActivePanel(savedTab);
 
 // ── About modal ───────────────────────────────────────────────────────────────
 const aboutModal = document.getElementById('about-modal');
@@ -237,4 +248,8 @@ initMetadata();
 initELA();
 initClone();
 initStrip();
+initNoise();
+initShadow();
+initRedactor();
+initPivot();
 initReport();
