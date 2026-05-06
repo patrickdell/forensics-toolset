@@ -69,12 +69,12 @@ strip.js                Metadata stripping with keep-date / keep-copyright optio
 report.js               Compile findings → window.print() PDF
 
 ── Utilities ──
-utils.js                saveFile, setupDropzone, setProgress, formatBytes, sha256
-favicon.svg             Magnifying glass icon, blue accent
+utils.js                setupDropzone, setActiveChip, saveFile, setProgress,
+                        formatBytes, sha256, escapeHtml
 
 ── Cloudflare Pages ──
 package.json            { "name": "forensics-toolset", "private": true }
-_redirects              / /index.html 200
+_redirects              Cloudflare Pages routing stub
 CLAUDE.md               This file
 ```
 
@@ -112,8 +112,9 @@ Key tokens:
 3. Add a tab button `<button class="tab-btn" data-tab="mytool">…</button>` in the nav.
 4. Register the panel in `app.js` `panels` map: `mytool: 'panel-mytool'`.
 5. Import and call `initMyTool()` from `app.js`.
-6. Listen for `document.dispatchEvent(new CustomEvent('fts:loaded', { detail: img }))`
-   to know when image is ready.
+6. In `initMyTool`, register `fts:loaded` listener and wire any button/chip listeners.
+   **All addEventListener calls go in init*, not inside the fts:loaded handler** —
+   the fts:loaded handler fires on every image load and would stack duplicate listeners.
 7. Store results in `results.mytool = { … }` for the report.
 
 ---
@@ -123,13 +124,17 @@ Key tokens:
 ### Shared image state (app.js)
 
 ```js
-const img = {
-  file:       null,   // original File
-  arrayBuffer: null,  // for EXIF + SHA-256
-  bitmap:     null,   // ImageBitmap for canvas ops
-  name:       null,
-  type:       null,   // MIME type
-  isJpeg:     false,
+export const img = {
+  file:        null,   // original File
+  arrayBuffer: null,   // for EXIF + SHA-256
+  bitmap:      null,   // ImageBitmap for canvas ops
+  name:        null,
+  type:        null,   // MIME type
+  isJpeg:      false,
+};
+
+export const results = {
+  meta: null, ela: null, clone: null, strip: null,
 };
 ```
 
@@ -139,7 +144,28 @@ const img = {
 document.dispatchEvent(new CustomEvent('fts:loaded', { detail: img }));
 ```
 
-Each tool module listens for this event to know when it's safe to begin analysis.
+Each tool module listens for this event. The handler should only reset UI state and
+trigger analysis — **not** register new event listeners (those go in `init*`).
+
+### init* structure
+
+```js
+export function initMyTool() {
+  // Wire all persistent listeners here — runs once at page load
+  document.getElementById('my-btn').addEventListener('click', doSomething);
+  document.getElementById('my-chips').querySelectorAll('.chip').forEach(chip => {
+    chip.addEventListener('click', () => { … });
+  });
+  // Register image-load handler last
+  document.addEventListener('fts:loaded', setupMyTool);
+}
+
+async function setupMyTool() {
+  // Reset UI state and run analysis — called on every new image
+  if (!img.bitmap) return;
+  …
+}
+```
 
 ### File saves
 
@@ -149,30 +175,41 @@ API first (shows a native save dialog), falls back to a hidden `<a download>` cl
 ### Dropzones
 
 `setupDropzone(el, filter, handler)` in `utils.js` — handles drag-and-drop and
-`<input type="file">` for a given drop target element.
+`<input type="file">` for a given drop target element. `filter` is a function that
+returns true for accepted files (e.g. `f => f.type.startsWith('image/')`).
 
-### Explanation toggles
+### Chip groups
 
-Each tool panel has a toggleable explanation block wired with:
-```js
-localStorage.setItem('fts_explain_[toolname]', 'open'|'closed')
-```
+`setActiveChip(container, activeBtn)` in `utils.js` — removes `.active` from all
+chips in the container and adds it to `activeBtn`.
 
-Default: open in wizard mode, closed in tab mode.
+### Utility functions in utils.js
+
+| Function | Signature | Purpose |
+|----------|-----------|---------|
+| `setupDropzone` | `(el, filter, handler)` | Drag-and-drop + browse |
+| `setActiveChip` | `(container, activeBtn)` | Chip group selection |
+| `saveFile` | `(blob, name, mime)` | Download a Blob |
+| `setProgress` | `(barEl, labelEl, pct, text)` | Progress bar update |
+| `formatBytes` | `(bytes)` | Human-readable file size |
+| `sha256` | `(arrayBuffer)` → hex string | SHA-256 digest |
+| `escapeHtml` | `(text)` | Escape HTML special chars (cached div) |
 
 ### Web Workers
 
 `clone.worker.js` runs block matching off the main thread to avoid UI freezing.
-Use `postMessage` with transferred ArrayBuffer for zero-copy image data:
+Use `postMessage` with a transferred ArrayBuffer for zero-copy image data:
 
 ```js
 worker.postMessage({ pixels, width, height, … }, [imageData.data.buffer]);
 ```
 
+Progress is reported via `{ type: 'progress', progress: 0–100 }` messages.
+Results arrive as `{ type: 'result', matches: […] }`.
+
 ### Canvas heatmaps
 
-ELA and other analyses output canvas elements stored in `results.*` for report
-embedding:
+ELA and clone analyses store data URLs for report embedding:
 
 ```js
 results.ela.canvas = canvas.toDataURL();
@@ -188,28 +225,40 @@ results.ela.canvas = canvas.toDataURL();
 - Computes SHA-256 via Web Crypto
 - Displays forensically relevant fields by default; "Show all fields" toggle for extended view
 - Flags:
-  - **Red**: AI generation tools, GPS 0°0°, DateTime inconsistencies
+  - **Red**: AI generation tools detected, GPS 0°0°, DateTime inconsistencies
   - **Yellow**: Editing software, missing device info, embedded thumbnails
   - **Green**: GPS location detected
 
 ### ELA (ela.js)
 
-- Re-encodes image as JPEG and compares pixel differences
+- Re-encodes image as JPEG and compares per-pixel differences
 - Heatmap: dark blue (0) → green (50) → yellow (150) → red (255+)
-- Quality slider: 75, 90, 95
-- Amplification slider: 5×, 10×, 15×, 20× (default 15×)
+- Quality chips: 75 (default), 90, 95
+- Amplification chips: 5×, 10×, 15× (default), 20×
 - Display modes: ELA only, side-by-side with original, overlay at 70%
-- Non-JPEG warning: ELA designed for JPEG analysis
+- Non-JPEG warning shown; ELA still runs for reference
+- `currentELA` only stores the difference ImageData — original is drawn from `img.bitmap`
+  on demand to avoid holding a second full-resolution copy in memory
 
 ### Clone Detection (clone.js + clone.worker.js)
 
-- Detects copy-move forgery by finding similar regions at different positions
-- Algorithm: Y-channel greyscale → overlapping 16×16 blocks → DCT features →
-  lexicographic sort → K-nearest-neighbour comparison
-- Sensitivity: Low (stride 16, threshold 0.35), Medium (8, 0.25), High (4, 0.18)
-- Size warning if > 2MP; option to analyse at 50% scale
-- Results shown as colour-coded rectangles with connecting lines
-- Limitations: rotation/scaling partially resistant; smooth areas generate noise
+- Detects copy-move forgery by finding similar image regions at different positions
+- Algorithm: Y-channel greyscale → overlapping 16×16 blocks → row/column feature
+  vectors → lexicographic sort → K-nearest-neighbour L2 distance comparison
+- Variance filter (`MIN_BLOCK_VARIANCE = 80`) skips smooth/uniform regions (sky, walls)
+  that would otherwise generate noise
+- Sensitivity settings:
+
+  | Setting | Stride | Threshold | K |
+  |---------|--------|-----------|---|
+  | Low (default) | 16px | 0.10 | 2 |
+  | Medium | 8px | 0.07 | 3 |
+  | High | 4px | 0.05 | 4 |
+
+- Capped at 60 matches to avoid visual noise
+- Size warning if > 2MP; option to analyse at 50% scale (single canvas draw, no
+  intermediate bitmap)
+- Results: colour-coded rectangles with connecting lines on annotated canvas
 
 ### Metadata Stripper (strip.js)
 
@@ -221,9 +270,10 @@ results.ela.canvas = canvas.toDataURL();
 
 ### Report (report.js)
 
-- Compiles findings from all analyses
+- Compiles findings from all completed analyses
 - Sections: File integrity, Forensic flags, Metadata fields, ELA image, Clone map
-- One-click print to PDF via `window.print()`
+- Print button wired once in `initReport` (not on every tool completion)
+- Opens a new window with light-mode print CSS for clean PDF output
 - Includes disclaimer and analysis context
 
 ---
@@ -236,54 +286,20 @@ be reviewed by a qualified professional.
 
 ---
 
-## Deployment (Cloudflare Pages)
-
-After code is ready locally:
-
-1. **Create GitHub repo**
-   - Go to github.com/new
-   - Name: `forensics-toolset`
-   - Leave empty (no README)
-
-2. **Push code**
-   ```
-   cd C:\Code\ForensicsToolset
-   git init
-   git add .
-   git commit -m "Initial commit — Forensics Toolset"
-   git remote add forensics-toolset https://github.com/patrickdell/forensics-toolset.git
-   git push -u forensics-toolset master
-   ```
-
-3. **Connect to Cloudflare Pages**
-   - https://dash.cloudflare.com → Pages → Create a project → Connect to Git
-   - Select `forensics-toolset` repository
-   - Build settings:
-     - Framework: None
-     - Build command: (leave blank)
-     - Build output: `/` (root)
-   - Click **Save and Deploy**
-
-4. **Domain**
-   - Cloudflare assigns `forensics-toolset.pages.dev` automatically
-   - Custom domain can be set later under Settings → Custom domains
-
----
-
 ## Verification checklist
 
-1. Drop a JPEG → loader bar shows filename, all tabs become active
+1. Drop a JPEG → loader bar shows filename + dimensions + file size, all tabs become active
 2. Metadata tab: fields table, SHA-256 shown, relevant flags appear
 3. ELA tab: heatmap renders, changing quality/amplification updates immediately
 4. ELA tab: drop a PNG → non-JPEG warning appears, ELA still runs
 5. Clone tab: click Analyse → progress bar runs, result shows on completion
 6. Clone tab: large image (>2MP) → size warning appears
-7. Strip tab: strip all → download JPEG, metadata reduced to zero
-8. Strip tab: keep date → downloaded file has DateTimeOriginal, no GPS
-9. Report tab: all analyses complete → report shows findings
-10. Report tab: click Print → PDF preview opens
-11. Wizard: click 🧭 → overlay appears, steps advance, explanations open by default
-12. Wizard: Exit wizard → tabs visible, results still shown
-13. Resize to 480px → hamburger menu appears, nav drawer works
-14. localStorage persistence: refresh → same tab active, explanation toggles same state
-
+7. Clone tab: load 3 images in sequence → clicking Analyse only fires once per click
+8. Strip tab: strip all → download JPEG, metadata reduced to zero
+9. Strip tab: keep date → downloaded file has DateTimeOriginal, no GPS
+10. Report tab: all analyses complete → report shows all findings sections
+11. Report tab: click Print → new window opens, PDF preview renders
+12. Wizard: click 🧭 → overlay appears, steps advance, explanations open by default
+13. Wizard: Exit wizard → tabs visible, results still shown
+14. Resize to 480px → hamburger menu appears, nav drawer works
+15. localStorage persistence: refresh → same tab active, explanation toggles same state
