@@ -30,13 +30,10 @@ const panels = {
 
 function setActivePanel(tabName) {
   if (!panels[tabName]) return;
-  // Hide all panels
   Object.values(panels).forEach(id => {
     document.getElementById(id)?.classList.remove('visible');
   });
-  // Show selected
   document.getElementById(panels[tabName])?.classList.add('visible');
-  // Sync tab buttons
   document.querySelectorAll('.tab-btn, .nav-drawer-item[data-tab]').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.tab === tabName);
   });
@@ -48,13 +45,7 @@ function setActivePanel(tabName) {
 const savedTab = localStorage.getItem('fts_tab') || 'meta';
 setActivePanel(savedTab);
 
-// Wire main tabs
-document.querySelectorAll('.tab-btn[data-tab]').forEach(btn => {
-  btn.addEventListener('click', () => setActivePanel(btn.dataset.tab));
-});
-
-// Wire drawer tabs
-document.querySelectorAll('.nav-drawer-item[data-tab]').forEach(btn => {
+document.querySelectorAll('.tab-btn[data-tab], .nav-drawer-item[data-tab]').forEach(btn => {
   btn.addEventListener('click', () => setActivePanel(btn.dataset.tab));
 });
 
@@ -75,7 +66,6 @@ async function loadImage(file) {
     return;
   }
 
-  // Update loader UI
   document.getElementById('fts-dropzone').style.display  = 'none';
   document.getElementById('fts-loaded-bar').style.display = 'flex';
   document.getElementById('fts-loaded-name').textContent  = img.name;
@@ -219,21 +209,19 @@ document.getElementById('wizard-btn').addEventListener('click', openWizard);
 document.getElementById('wizard-exit').addEventListener('click', closeWizard);
 document.getElementById('nav-wizard-btn')?.addEventListener('click', openWizard);
 
-document.getElementById('wizard-next').addEventListener('click', () => {
+function advanceWizard() {
   if (wizardStep < wizardSteps.length - 1) {
     wizardStep++;
     updateWizardUI();
-  } else {
-    closeWizard();
   }
+}
+
+document.getElementById('wizard-next').addEventListener('click', () => {
+  if (wizardStep < wizardSteps.length - 1) advanceWizard();
+  else closeWizard();
 });
 
-document.getElementById('wizard-skip').addEventListener('click', () => {
-  if (wizardStep < wizardSteps.length - 1) {
-    wizardStep++;
-    updateWizardUI();
-  }
-});
+document.getElementById('wizard-skip').addEventListener('click', advanceWizard);
 
 // ── Global keyboard shortcuts ─────────────────────────────────────────────────
 document.addEventListener('keydown', e => {

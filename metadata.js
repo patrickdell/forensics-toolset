@@ -3,9 +3,15 @@
  */
 
 import { img, results } from './app.js';
-import { sha256, formatBytes } from './utils.js';
+import { sha256, formatBytes, escapeHtml } from './utils.js';
 
 export function initMetadata() {
+  // Wire "show all fields" toggle once
+  document.getElementById('meta-all-fields-toggle').addEventListener('click', () => {
+    const allTableEl = document.getElementById('meta-all-table');
+    allTableEl.style.display = allTableEl.style.display === 'none' ? 'table' : 'none';
+  });
+
   document.addEventListener('fts:loaded', analyzeMetadata);
 }
 
@@ -106,20 +112,10 @@ async function analyzeMetadata() {
 
     // Render all fields table
     allTableEl.innerHTML = '';
-    const allFieldsMap = {};
     Object.entries(flatExif).forEach(([key, value]) => {
-      allFieldsMap[key] = value;
-    });
-
-    Object.entries(allFieldsMap).forEach(([key, value]) => {
       const tr = document.createElement('tr');
       tr.innerHTML = `<td class="meta-key">${escapeHtml(key)}</td><td class="meta-val">${escapeHtml(String(value)).substring(0, 200)}</td>`;
       allTableEl.appendChild(tr);
-    });
-
-    // Show all fields toggle
-    allFieldsToggle.addEventListener('click', () => {
-      allTableEl.style.display = allTableEl.style.display === 'none' ? 'table' : 'none';
     });
 
     // Add thumbnail if present
@@ -307,8 +303,3 @@ function extractThumbnail(exifData) {
   return null;
 }
 
-function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
-}

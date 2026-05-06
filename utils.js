@@ -56,6 +56,13 @@ export function setProgress(barEl, labelEl, pct, text) {
   if (labelEl && text !== undefined) labelEl.textContent = text;
 }
 
+/** Escape HTML special characters. */
+const _escDiv = document.createElement('div');
+export function escapeHtml(text) {
+  _escDiv.textContent = text;
+  return _escDiv.innerHTML;
+}
+
 /** Format bytes to human-readable string. */
 export function formatBytes(bytes) {
   if (bytes < 1024)       return bytes + ' B';

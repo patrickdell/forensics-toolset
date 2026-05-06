@@ -3,10 +3,7 @@
  */
 
 import { img, results } from './app.js';
-
-export function initClone() {
-  document.addEventListener('fts:loaded', setupClone);
-}
+import { setActiveChip } from './utils.js';
 
 let cloneSensitivity = 'low';  // default low — reduces false positives
 let cloneWorker = null;
@@ -18,26 +15,8 @@ const sensitivitySettings = {
   high:   { stride: 4,  threshold: 0.05, K: 4 },
 };
 
-async function setupClone() {
-  const controlsEl  = document.getElementById('clone-controls');
-  const analyseBtn  = document.getElementById('clone-analyse-btn');
-  const sizeWarnEl  = document.getElementById('clone-size-warn');
-  const scaleCheckbox = document.getElementById('clone-scale-checkbox');
-  const canvasWrap  = document.getElementById('clone-canvas-wrap');
-  const resultText  = document.getElementById('clone-result-text');
-  const statusEl    = document.getElementById('clone-status');
-
-  controlsEl.style.display = 'block';
-  analyseBtn.style.display = 'block';
-  canvasWrap.style.display = 'none';
-  if (resultText) resultText.style.display = 'none';
-  statusEl.style.display = 'none';
-
-  // Size warning for > 2 MP
-  const mp = (img.bitmap.width * img.bitmap.height) / 1_000_000;
-  sizeWarnEl.style.display = mp > 2 ? 'block' : 'none';
-
-  // Wire sensitivity chips
+export function initClone() {
+  // Wire sensitivity chips once
   document.getElementById('clone-sensitivity-chips').querySelectorAll('.chip').forEach(chip => {
     chip.classList.toggle('active', chip.dataset.sensitivity === cloneSensitivity);
     chip.addEventListener('click', () => {
@@ -46,7 +25,28 @@ async function setupClone() {
     });
   });
 
-  analyseBtn.addEventListener('click', () => runCloneDetection(scaleCheckbox.checked));
+  // Wire analyse button once — reads checkbox state at click time
+  document.getElementById('clone-analyse-btn').addEventListener('click', () => {
+    const scaleCheckbox = document.getElementById('clone-scale-checkbox');
+    runCloneDetection(scaleCheckbox.checked);
+  });
+
+  document.addEventListener('fts:loaded', setupClone);
+}
+
+async function setupClone() {
+  const sizeWarnEl = document.getElementById('clone-size-warn');
+
+  document.getElementById('clone-controls').style.display  = 'block';
+  document.getElementById('clone-analyse-btn').style.display = 'block';
+  document.getElementById('clone-canvas-wrap').style.display = 'none';
+
+  const resultText = document.getElementById('clone-result-text');
+  if (resultText) resultText.style.display = 'none';
+  document.getElementById('clone-status').style.display = 'none';
+
+  const mp = (img.bitmap.width * img.bitmap.height) / 1_000_000;
+  sizeWarnEl.style.display = mp > 2 ? 'block' : 'none';
 }
 
 async function runCloneDetection(scaleDown) {
@@ -58,40 +58,38 @@ async function runCloneDetection(scaleDown) {
   progressWrap.style.display = 'block';
   analyseBtn.disabled = true;
 
-  // Terminate previous worker if still running
   if (cloneWorker) { cloneWorker.terminate(); cloneWorker = null; }
 
   try {
-    let bitmap = img.bitmap;
-    let scale  = 1;
+    let scale = 1;
+    let srcW  = img.bitmap.width;
+    let srcH  = img.bitmap.height;
 
     if (scaleDown) {
-      const c = document.createElement('canvas');
-      c.width  = Math.round(img.bitmap.width  / 2);
-      c.height = Math.round(img.bitmap.height / 2);
-      c.getContext('2d').drawImage(img.bitmap, 0, 0, c.width, c.height);
-      bitmap = await createImageBitmap(c);
+      srcW  = Math.round(srcW / 2);
+      srcH  = Math.round(srcH / 2);
       scale = 0.5;
     }
 
     const tmp = document.createElement('canvas');
-    tmp.width  = bitmap.width;
-    tmp.height = bitmap.height;
-    tmp.getContext('2d').drawImage(bitmap, 0, 0);
-    const imageData = tmp.getContext('2d').getImageData(0, 0, bitmap.width, bitmap.height);
+    tmp.width  = srcW;
+    tmp.height = srcH;
+    const tmpCtx = tmp.getContext('2d', { willReadFrequently: true });
+    tmpCtx.drawImage(img.bitmap, 0, 0, srcW, srcH);
+    const imageData = tmpCtx.getImageData(0, 0, srcW, srcH);
 
     cloneWorker = new Worker('clone.worker.js');
     const settings = sensitivitySettings[cloneSensitivity];
 
     cloneWorker.postMessage(
-      { pixels: imageData.data, width: bitmap.width, height: bitmap.height,
+      { pixels: imageData.data, width: srcW, height: srcH,
         blockSize: 16, stride: settings.stride, threshold: settings.threshold, K: settings.K },
       [imageData.data.buffer]
     );
 
     cloneWorker.onmessage = (e) => {
       if (e.data.type === 'progress') {
-        progressBar.style.width = e.data.progress + '%';
+        progressBar.style.width  = e.data.progress + '%';
         progressText.textContent = `Analysing… ${e.data.progress}%`;
 
       } else if (e.data.type === 'result') {
@@ -120,6 +118,7 @@ async function runCloneDetection(scaleDown) {
   } catch (err) {
     progressWrap.style.display = 'none';
     analyseBtn.disabled = false;
+    if (cloneWorker) { cloneWorker.terminate(); cloneWorker = null; }
     alert('Clone detection error: ' + err);
   }
 }
@@ -137,18 +136,16 @@ function renderCloneResults(matches, width, height) {
 
   if (matches.length > 0) {
     const colours = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#f9ca24', '#a29bfe'];
-
     matches.forEach((m, idx) => {
       const col = colours[idx % colours.length];
       ctx.globalAlpha = 0.75;
       ctx.strokeStyle = col;
-      ctx.lineWidth = 2;
+      ctx.lineWidth   = 2;
       ctx.strokeRect(m.ax, m.ay, blockSize, blockSize);
       ctx.strokeRect(m.bx, m.by, blockSize, blockSize);
 
-      // Connecting line
       ctx.globalAlpha = 0.35;
-      ctx.lineWidth = 1;
+      ctx.lineWidth   = 1;
       ctx.beginPath();
       ctx.moveTo(m.ax + blockSize / 2, m.ay + blockSize / 2);
       ctx.lineTo(m.bx + blockSize / 2, m.by + blockSize / 2);
@@ -171,13 +168,8 @@ function renderCloneResults(matches, width, height) {
   }
 
   results.clone = {
-    canvas: canvas.toDataURL(),
-    matchCount: matches.length,
+    canvas:      canvas.toDataURL(),
+    matchCount:  matches.length,
     sensitivity: cloneSensitivity,
   };
-}
-
-function setActiveChip(container, activeBtn) {
-  container.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-  activeBtn.classList.add('active');
 }

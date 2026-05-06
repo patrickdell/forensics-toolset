@@ -3,11 +3,43 @@
  */
 
 import { img, results } from './app.js';
+import { escapeHtml, formatBytes } from './utils.js';
 
 export function initReport() {
-  document.addEventListener('fts:loaded', updateReportStatus);
+  // Wire print button once
+  document.getElementById('report-print-btn').addEventListener('click', () => {
+    const printWindow = window.open('', '', 'height=600,width=800');
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Forensic Image Analysis Report</title>
+        <meta charset="UTF-8">
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; line-height: 1.6; color: #333; }
+          h1, h2, h3 { margin-top: 1.5em; margin-bottom: 0.5em; }
+          h1 { font-size: 1.8em; border-bottom: 2px solid #333; padding-bottom: 0.5em; }
+          h2 { font-size: 1.3em; border-bottom: 1px solid #ddd; padding-bottom: 0.3em; }
+          table { width: 100%; border-collapse: collapse; margin: 1em 0; }
+          th, td { padding: 0.5em; border: 1px solid #ddd; text-align: left; }
+          th { background: #f5f5f5; font-weight: bold; }
+          img { max-width: 100%; height: auto; margin: 1em 0; border: 1px solid #ddd; }
+          .flag { padding: 0.5em; margin: 0.5em 0; border-left: 4px solid; border-radius: 2px; }
+          .flag.red { border-color: #ff5f5f; background: #fff5f5; color: #333; }
+          .flag.yellow { border-color: #f5a623; background: #fffef0; color: #333; }
+          .flag.green { border-color: #3ecf8e; background: #f0fef6; color: #333; }
+          .disclaimer { margin-top: 2em; padding: 1em; background: #f5f5f5; border-radius: 4px; font-size: 0.9em; }
+          @media print { body { margin: 0; padding: 1cm; } img { page-break-inside: avoid; } }
+        </style>
+      </head>
+      <body>${generateReportHTML()}</body>
+      </html>
+    `);
+    printWindow.document.close();
+    setTimeout(() => { printWindow.print(); printWindow.close(); }, 250);
+  });
 
-  // Listen for tool completions
+  document.addEventListener('fts:loaded', updateReportStatus);
   document.addEventListener('fts:meta:complete', updateReportStatus);
   document.addEventListener('fts:ela:complete', updateReportStatus);
   document.addEventListener('fts:clone:complete', updateReportStatus);
@@ -52,49 +84,7 @@ function updateReportStatus() {
   });
 
   // Generate preview
-  const previewContent = generateReportHTML();
-  document.getElementById('report-content').innerHTML = previewContent;
-
-  // Wire print button
-  printBtn.onclick = () => {
-    const printWindow = window.open('', '', 'height=600,width=800');
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Forensic Image Analysis Report</title>
-        <meta charset="UTF-8">
-        <style>
-          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; line-height: 1.6; color: #333; }
-          h1, h2, h3 { margin-top: 1.5em; margin-bottom: 0.5em; }
-          h1 { font-size: 1.8em; border-bottom: 2px solid #333; padding-bottom: 0.5em; }
-          h2 { font-size: 1.3em; border-bottom: 1px solid #ddd; padding-bottom: 0.3em; }
-          table { width: 100%; border-collapse: collapse; margin: 1em 0; }
-          th, td { padding: 0.5em; border: 1px solid #ddd; text-align: left; }
-          th { background: #f5f5f5; font-weight: bold; }
-          img { max-width: 100%; height: auto; margin: 1em 0; border: 1px solid #ddd; }
-          .flag { padding: 0.5em; margin: 0.5em 0; border-left: 4px solid; border-radius: 2px; }
-          .flag.red { border-color: #ff5f5f; background: #fff5f5; color: #333; }
-          .flag.yellow { border-color: #f5a623; background: #fffef0; color: #333; }
-          .flag.green { border-color: #3ecf8e; background: #f0fef6; color: #333; }
-          .disclaimer { margin-top: 2em; padding: 1em; background: #f5f5f5; border-radius: 4px; font-size: 0.9em; }
-          @media print {
-            body { margin: 0; padding: 1cm; }
-            img { page-break-inside: avoid; }
-          }
-        </style>
-      </head>
-      <body>
-        ${previewContent}
-      </body>
-      </html>
-    `);
-    printWindow.document.close();
-    setTimeout(() => {
-      printWindow.print();
-      printWindow.close();
-    }, 250);
-  };
+  document.getElementById('report-content').innerHTML = generateReportHTML();
 }
 
 function generateReportHTML() {
@@ -183,14 +173,3 @@ function generateReportHTML() {
   return html;
 }
 
-function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
-}
-
-function formatBytes(bytes) {
-  if (bytes < 1024) return bytes + ' B';
-  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-  return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
-}
