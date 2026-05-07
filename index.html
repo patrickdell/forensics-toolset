@@ -109,6 +109,7 @@
 
     <div class="tool-explain-wrap">
       <button class="tool-explain-toggle" data-target="meta-explain">ⓘ About this analysis</button>
+      <a class="tool-link" data-permalink="meta">Link to this tool</a>
       <div id="meta-explain" class="tool-explain" style="display:none">
         <p>Extracts EXIF, IPTC, and XMP metadata and checks for forensic indicators: editing software, AI generation tools, timestamp anomalies, and GPS data.</p>
         <p><strong>Important:</strong> Metadata can be added, removed, or modified without affecting pixel content, and is routinely stripped by social media platforms. Its presence or absence does not prove or disprove authenticity.</p>
@@ -140,6 +141,7 @@
 
     <div class="tool-explain-wrap">
       <button class="tool-explain-toggle" data-target="ela-explain">ⓘ About ELA</button>
+      <a class="tool-link" data-permalink="ela">Link to this tool</a>
       <div id="ela-explain" class="tool-explain" style="display:none">
         <p>ELA re-saves the image as JPEG and measures per-pixel differences. Areas that were edited or composited often show higher error levels than undisturbed regions.</p>
         <p><strong>Does not indicate editing:</strong> Text, sharp edges, highly-textured regions (fabric, foliage), and repeated saves at the same quality all produce high ELA values naturally.</p>
@@ -194,6 +196,7 @@
 
     <div class="tool-explain-wrap">
       <button class="tool-explain-toggle" data-target="clone-explain">ⓘ About clone detection</button>
+      <a class="tool-link" data-permalink="clone">Link to this tool</a>
       <div id="clone-explain" class="tool-explain" style="display:none">
         <p>Identifies copy-move forgery by finding visually similar regions at different positions. Matched blocks are highlighted with colour-coded overlays.</p>
         <p><strong>Limitations:</strong> Smooth areas (sky, walls, solid colours) may produce false positives at higher sensitivity. Does not detect AI inpainting or content-aware fill. Start with Low sensitivity.</p>
@@ -250,6 +253,7 @@
 
     <div class="tool-explain-wrap">
       <button class="tool-explain-toggle" data-target="strip-explain">ⓘ About metadata stripping</button>
+      <a class="tool-link" data-permalink="strip">Link to this tool</a>
       <div id="strip-explain" class="tool-explain" style="display:none">
         <p>Re-encodes the image through the browser canvas, which strips all embedded metadata. Optionally re-injects a limited set of fields after stripping.</p>
       </div>
@@ -304,6 +308,7 @@
 
     <div class="tool-explain-wrap">
       <button class="tool-explain-toggle" data-target="noise-explain">ⓘ About noise analysis</button>
+      <a class="tool-link" data-permalink="noise">Link to this tool</a>
       <div id="noise-explain" class="tool-explain" style="display:none">
         <p>Detects compression artifacts and noise patterns by comparing each pixel to the local median. High residuals indicate noisy regions, compression artifacts, or edited areas.</p>
         <p><strong>How it works:</strong> A 3×3 median filter is applied to every pixel. The difference between the pixel and the local median is the residual. Higher residuals suggest noise, compression, or manipulation.</p>
@@ -348,6 +353,7 @@
 
     <div class="tool-explain-wrap">
       <button class="tool-explain-toggle" data-target="shadow-explain">ⓘ About shadow analysis</button>
+      <a class="tool-link" data-permalink="shadow">Link to this tool</a>
       <div id="shadow-explain" class="tool-explain" style="display:none">
         <p>Draw light vectors on the image to verify shadow consistency. Inconsistent shadow direction or length can indicate compositing or manipulation.</p>
         <p><strong>How to use:</strong> Click and drag on the image to draw arrows representing light sources or shadows. The angle and distance of each vector are measured and displayed in the vector list.</p>
@@ -388,6 +394,7 @@
 
     <div class="tool-explain-wrap">
       <button class="tool-explain-toggle" data-target="report-explain">ⓘ About the report</button>
+      <a class="tool-link" data-permalink="report">Link to this tool</a>
       <div id="report-explain" class="tool-explain" style="display:none">
         <p>Compiles findings from all completed analyses into a printable document. Use your browser's Print → Save as PDF to export.</p>
         <p><strong>Disclaimer:</strong> This is an automated analysis to assist human review. Findings are indicators only and must be interpreted by a qualified analyst.</p>

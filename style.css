@@ -471,6 +471,16 @@ fieldset { border: none; padding: 0; }
 .tool-explain p { margin-bottom: 8px; }
 .tool-explain p:last-child { margin-bottom: 0; }
 .tool-explain strong { color: var(--ink); }
+.tool-link {
+  display: inline-block;
+  margin-left: 12px;
+  font-size: 12px;
+  color: var(--accent);
+  text-decoration: none;
+  cursor: pointer;
+  transition: color .15s;
+}
+.tool-link:hover { color: var(--accent-hover); }
 
 /* ── Forensic flag badges ─────────────────────────────────────────────────── */
 .flags-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }

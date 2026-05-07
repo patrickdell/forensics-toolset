@@ -41,16 +41,30 @@ function setActivePanel(tabName) {
   document.querySelectorAll('.tab-btn, .nav-drawer-item[data-tab]').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.tab === tabName);
   });
+  history.replaceState(null, '', '#' + tabName);
   localStorage.setItem('fts_tab', tabName);
   // Close drawer after it's initialized (see below)
   if (typeof closeDrawer === 'function') closeDrawer();
 }
 
-// Restore saved tab (will be called after drawer is initialized)
-const savedTab = localStorage.getItem('fts_tab') || 'meta';
+// Restore tab from hash or localStorage
+const hash = location.hash.replace('#', '');
+const savedTab = (hash && panels[hash]) ? hash : (localStorage.getItem('fts_tab') || 'meta');
 
 document.querySelectorAll('.tab-btn[data-tab], .nav-drawer-item[data-tab]').forEach(btn => {
   btn.addEventListener('click', () => setActivePanel(btn.dataset.tab));
+});
+
+// Permalink links — copy full URL to clipboard on click
+document.addEventListener('click', e => {
+  const link = e.target.closest('[data-permalink]');
+  if (!link) return;
+  e.preventDefault();
+  const url = location.origin + location.pathname + '#' + link.dataset.permalink;
+  navigator.clipboard?.writeText(url).catch(() => {});
+  const orig = link.textContent;
+  link.textContent = '✓ Copied link!';
+  setTimeout(() => { link.textContent = orig; }, 2000);
 });
 
 // ── Image loading ─────────────────────────────────────────────────────────────
