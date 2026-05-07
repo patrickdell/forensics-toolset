@@ -25,8 +25,6 @@
     <button class="tab-btn" data-tab="strip">Strip</button>
     <button class="tab-btn" data-tab="noise">Noise</button>
     <button class="tab-btn" data-tab="shadow">Shadows</button>
-    <button class="tab-btn" data-tab="redactor">Redaction</button>
-    <button class="tab-btn" data-tab="pivot">Pivot</button>
     <button class="tab-btn" data-tab="report">Report</button>
   </nav>
   <button class="header-about-btn" id="about-btn">About</button>
@@ -48,8 +46,6 @@
   <button class="nav-drawer-item" data-tab="strip">Metadata Stripper</button>
   <button class="nav-drawer-item" data-tab="noise">Noise Analyzer</button>
   <button class="nav-drawer-item" data-tab="shadow">Shadow Plotter</button>
-  <button class="nav-drawer-item" data-tab="redactor">Redaction Checker</button>
-  <button class="nav-drawer-item" data-tab="pivot">Pivot Search</button>
   <button class="nav-drawer-item" data-tab="report">Report</button>
   <button class="nav-drawer-item nav-drawer-wizard" id="nav-wizard-btn">🧭 Guided Analysis</button>
   <div class="nav-drawer-about">
@@ -382,89 +378,6 @@
     </div>
 
     <div id="shadow-status" class="fts-notice" style="display:none">
-      <strong>No image loaded.</strong> Drop or browse an image above to begin.
-    </div>
-  </section>
-
-  <!-- Redaction Reversibility Checker -->
-  <section id="panel-redactor" class="panel">
-    <h2 class="panel-title">Redaction Reversibility Checker</h2>
-
-    <div class="tool-explain-wrap">
-      <button class="tool-explain-toggle" data-target="redactor-explain">ⓘ About redaction detection</button>
-      <div id="redactor-explain" class="tool-explain" style="display:none">
-        <p>Detects blur, pixelation, and swirl artifacts that indicate redacted or obscured regions. These artifacts can sometimes reveal information about what was hidden or indicate intentional tampering.</p>
-        <p><strong>Detection modes:</strong> Select a redaction technique to scan for specific artifact patterns. Multiple modes can reveal different editing techniques.</p>
-        <p><strong>How to interpret:</strong> Detected regions are highlighted with confidence scores. Red regions show high confidence detections. Note that some legitimate image features (compression artifacts, noise) can produce false positives.</p>
-      </div>
-    </div>
-
-    <div id="redactor-controls" style="display:none">
-      <div class="controls-row">
-        <div class="control-group">
-          <label class="control-label">Detection mode</label>
-          <div id="redactor-mode-chips" class="chip-group">
-            <button class="chip active" data-mode="blur">Blur</button>
-            <button class="chip" data-mode="pixelation">Pixelation</button>
-            <button class="chip" data-mode="swirl">Swirl</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div id="redactor-canvas-wrap" class="fts-canvas-wrap" style="display:none">
-      <canvas id="redactor-canvas"></canvas>
-      <div class="fts-progress-wrap" style="display:none">
-        <div class="fts-progress-bar" id="redactor-progress-bar"></div>
-        <span class="fts-progress-label" id="redactor-progress-label">Scanning…</span>
-      </div>
-    </div>
-
-    <div id="redactor-results" style="display:none; margin-top:1.5rem">
-      <h3 class="section-label">Regions detected: <span id="redactor-count">0</span></h3>
-      <div id="redactor-details" class="redactor-details"></div>
-    </div>
-
-    <div id="redactor-status" class="fts-notice" style="display:none">
-      <strong>No image loaded.</strong> Drop or browse an image above to begin.
-    </div>
-  </section>
-
-  <!-- Reverse Image Search Pivot Board -->
-  <section id="panel-pivot" class="panel">
-    <h2 class="panel-title">Reverse Image Search</h2>
-
-    <div class="tool-explain-wrap">
-      <button class="tool-explain-toggle" data-target="pivot-explain">ⓘ About pivot search</button>
-      <div id="pivot-explain" class="tool-explain" style="display:none">
-        <p>Search for your image across multiple reverse image search engines. Click any search engine to open it in a new tab with your image.</p>
-        <p><strong>Privacy:</strong> This tool creates data URLs or blobs of your image locally and sends them directly to each search engine — nothing passes through external servers or storage.</p>
-      </div>
-    </div>
-
-    <div id="pivot-controls" style="display:none">
-      <h3 class="section-label">Search engines</h3>
-      <div class="pivot-links">
-        <button class="pivot-btn" id="pivot-google-btn">
-          <span class="pivot-icon">🔍</span>
-          <span class="pivot-label">Google Lens</span>
-        </button>
-        <button class="pivot-btn" id="pivot-tineye-btn">
-          <span class="pivot-icon">👁️</span>
-          <span class="pivot-label">TinEye</span>
-        </button>
-        <button class="pivot-btn" id="pivot-yandex-btn">
-          <span class="pivot-icon">🔎</span>
-          <span class="pivot-label">Yandex</span>
-        </button>
-        <button class="pivot-btn" id="pivot-baidu-btn">
-          <span class="pivot-icon">🔎</span>
-          <span class="pivot-label">Baidu</span>
-        </button>
-      </div>
-    </div>
-
-    <div id="pivot-status" class="fts-notice" style="display:none">
       <strong>No image loaded.</strong> Drop or browse an image above to begin.
     </div>
   </section>

@@ -8,8 +8,6 @@ import { initClone }    from './clone.js';
 import { initStrip }    from './strip.js';
 import { initNoise }    from './noise.js';
 import { initShadow }   from './shadow.js';
-import { initRedactor } from './redactor.js';
-import { initPivot }    from './pivot.js';
 import { initReport }   from './report.js';
 import { setupDropzone } from './utils.js';
 
@@ -20,7 +18,7 @@ export const img = {
 };
 
 export const results = {
-  meta: null, ela: null, noise: null, clone: null, strip: null, redactor: null,
+  meta: null, ela: null, noise: null, clone: null, strip: null,
 };
 
 // ── Panel routing ─────────────────────────────────────────────────────────────
@@ -31,8 +29,6 @@ const panels = {
   strip:    'panel-strip',
   noise:    'panel-noise',
   shadow:   'panel-shadow',
-  redactor: 'panel-redactor',
-  pivot:    'panel-pivot',
   report:   'panel-report',
 };
 
@@ -250,6 +246,4 @@ initClone();
 initStrip();
 initNoise();
 initShadow();
-initRedactor();
-initPivot();
 initReport();
