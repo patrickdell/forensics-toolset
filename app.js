@@ -8,6 +8,7 @@ import { initClone }    from './clone.js';
 import { initStrip }    from './strip.js';
 import { initNoise }    from './noise.js';
 import { initShadow }     from './shadow.js';
+import { initWatermark }  from './watermark.js';
 import { initReport }     from './report.js';
 import { setupDropzone } from './utils.js';
 
@@ -18,7 +19,7 @@ export const img = {
 };
 
 export const results = {
-  meta: null, ela: null, noise: null, clone: null, strip: null,
+  meta: null, ela: null, noise: null, clone: null, strip: null, watermark: null,
 };
 
 // ── Panel routing ─────────────────────────────────────────────────────────────
@@ -29,6 +30,7 @@ const panels = {
   strip:    'panel-strip',
   noise:    'panel-noise',
   shadow:      'panel-shadow',
+  watermark:   'panel-watermark',
   suncalc:     'panel-suncalc',
   report:      'panel-report',
 };
@@ -177,10 +179,11 @@ const wizardStepTitle = document.getElementById('wizard-step-title');
 const wizardDots     = document.getElementById('wizard-dots');
 
 const wizardSteps = [
-  { key: 'meta',   title: 'Metadata' },
-  { key: 'ela',    title: 'ELA' },
-  { key: 'clone',  title: 'Clone Detection' },
-  { key: 'report', title: 'Report' },
+  { key: 'meta',      title: 'Metadata' },
+  { key: 'ela',       title: 'ELA' },
+  { key: 'clone',     title: 'Clone Detection' },
+  { key: 'watermark', title: 'AI Watermarks' },
+  { key: 'report',    title: 'Report' },
 ];
 let wizardStep = 0;
 
@@ -271,4 +274,5 @@ initClone();
 initStrip();
 initNoise();
 initShadow();
+initWatermark();
 initReport();

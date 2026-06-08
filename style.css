@@ -870,6 +870,57 @@ input[type=range]::-moz-range-thumb {
 .pivot-icon { font-size: 2rem; }
 .pivot-label { text-align: center; }
 
+/* ── AI Watermark checker ─────────────────────────────────────────────────── */
+.watermark-scanning { color: var(--muted); margin: 1rem 0; }
+
+.watermark-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--muted);
+  border-radius: var(--radius);
+  padding: 0.85rem 1rem;
+  margin-bottom: 0.6rem;
+}
+.watermark-danger  { border-left-color: var(--danger); }
+.watermark-warning { border-left-color: var(--warning); }
+.watermark-success { border-left-color: var(--success); }
+.watermark-neutral { border-left-color: var(--line); }
+.watermark-info    { border-left-color: var(--accent); }
+
+.watermark-card-hd {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.55rem;
+  margin-bottom: 0.35rem;
+}
+.watermark-card-icon    { flex-shrink: 0; }
+.watermark-card-title   { font-weight: 600; font-size: 0.875rem; color: var(--ink); }
+.watermark-card-verdict {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-left: auto;
+}
+.watermark-danger  .watermark-card-verdict { color: var(--danger); }
+.watermark-warning .watermark-card-verdict { color: var(--warning); }
+.watermark-success .watermark-card-verdict { color: var(--success); }
+
+.watermark-card-body {
+  font-size: 0.82rem;
+  color: var(--muted);
+  line-height: 1.65;
+  margin: 0;
+}
+.watermark-card-body a    { color: var(--accent); }
+.watermark-card-body code {
+  font-family: 'SF Mono', 'Fira Mono', monospace;
+  font-size: 0.78rem;
+  background: var(--code-bg);
+  color: var(--code-text);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
 /* ── Shadow colour swatches ───────────────────────────────────────────────── */
 .shadow-colour-chip {
   width: 26px;

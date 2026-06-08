@@ -25,6 +25,7 @@
     <button class="tab-btn" data-tab="strip">Strip</button>
     <button class="tab-btn" data-tab="noise">Noise</button>
     <button class="tab-btn" data-tab="shadow">Shadows</button>
+    <button class="tab-btn" data-tab="watermark">AI Watermarks</button>
     <button class="tab-btn" data-tab="suncalc">SunCalc ↗</button>
     <button class="tab-btn" data-tab="report">Report</button>
   </nav>
@@ -47,6 +48,7 @@
   <button class="nav-drawer-item" data-tab="strip">Metadata Stripper</button>
   <button class="nav-drawer-item" data-tab="noise">Noise Analyzer</button>
   <button class="nav-drawer-item" data-tab="shadow">Shadow Plotter</button>
+  <button class="nav-drawer-item" data-tab="watermark">AI Watermarks</button>
   <button class="nav-drawer-item" data-tab="suncalc">SunCalc ↗</button>
   <button class="nav-drawer-item" data-tab="report">Report</button>
   <button class="nav-drawer-item nav-drawer-wizard" id="nav-wizard-btn">🧭 Guided Analysis</button>
@@ -90,6 +92,7 @@
     </div>
     <div class="wizard-dots" id="wizard-dots">
       <span class="wizard-dot active"></span>
+      <span class="wizard-dot"></span>
       <span class="wizard-dot"></span>
       <span class="wizard-dot"></span>
       <span class="wizard-dot"></span>
@@ -450,6 +453,31 @@
 
 
   <!-- Shadow Finder panel removed -->
+  <!-- AI Watermarks & Provenance -->
+  <section id="panel-watermark" class="panel">
+    <h2 class="panel-title">AI Watermarks &amp; Provenance</h2>
+
+    <div class="tool-explain-wrap">
+      <button class="tool-explain-toggle" data-target="watermark-explain">ⓘ About this analysis</button>
+      <a class="tool-link" data-permalink="watermark">Link to this tool</a>
+      <div id="watermark-explain" class="tool-explain" style="display:none">
+        <p>Checks for three classes of provenance signal that can be verified entirely in your browser — no data is uploaded anywhere.</p>
+        <p><strong>C2PA / Content Credentials:</strong> The <a href="https://c2pa.org/" target="_blank" rel="noopener">Coalition for Content Provenance and Authenticity</a> open standard embeds a cryptographically signed manifest into image files. It records which tools touched the image and whether AI was involved. Adobe Photoshop, Lightroom, Firefly, Nikon Z-series cameras, Sony α-series, and Microsoft tools all embed C2PA. Detection here confirms presence only — cryptographic verification of the signature chain requires an external validator.</p>
+        <p><strong>IPTC Digital Source Type:</strong> The <a href="https://iptc.org/std/photometadata/documentation/userguide/" target="_blank" rel="noopener">IPTC Photo Metadata Standard</a> includes a <code>DigitalSourceType</code> field that declares whether an image is an original photo, AI-generated, or a synthetic composite. Adobe tools write this field automatically for AI-generated content. Like all metadata, it can be edited or removed.</p>
+        <p><strong>AI generator fingerprints:</strong> Known AI tool names and signatures in EXIF/XMP software, creator, and history fields.</p>
+        <p><strong>False positives and limitations:</strong> All three checks rely on declared or embedded metadata that can be stripped, fabricated, or simply absent. A clean result does not confirm authenticity. Authentic news photographs rarely carry C2PA. Most AI-generated images in circulation have had metadata stripped before distribution.</p>
+        <p><strong>What cannot be checked locally:</strong> SynthID (Google DeepMind) and other invisible pixel-level watermarks require their proprietary detector models — they cannot be verified in a browser. Their absence tells you nothing.</p>
+        <p><strong>Further reading:</strong> <a href="https://contentauthenticity.org/" target="_blank" rel="noopener">Content Authenticity Initiative</a> · <a href="https://iptc.org/standards/photo-metadata/" target="_blank" rel="noopener">IPTC Photo Metadata Standard</a> · <a href="https://bellingcat.gitbook.io/toolkit" target="_blank" rel="noopener">Bellingcat toolkit</a> <em>(third-party — some tools require upload)</em></p>
+      </div>
+    </div>
+
+    <div id="watermark-results" style="display:none"></div>
+
+    <div id="watermark-status" class="fts-notice" style="display:none">
+      <strong>No image loaded.</strong> Drop or browse an image above to begin.
+    </div>
+  </section>
+
   <!-- SunCalc link-out -->
   <section id="panel-suncalc" class="panel">
     <h2 class="panel-title">SunCalc</h2>

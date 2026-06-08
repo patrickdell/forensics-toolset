@@ -60,6 +60,7 @@ function updateReportStatus() {
     ELA: !!results.ela,
     'Noise Analysis': !!results.noise,
     'Clone Detection': !!results.clone,
+    'AI Watermarks': !!results.watermark,
     'Metadata Stripper': !!results.strip,
     'Redaction Detection': !!results.redactor,
   };
@@ -167,6 +168,24 @@ function generateReportHTML() {
         <em>Matched regions are shown in colour-coded overlays. Smooth areas generate noise at high sensitivity.</em>
       </p>
     `;
+  }
+
+  // AI watermarks & provenance
+  if (results.watermark) {
+    const w = results.watermark;
+    const rows = [
+      ['C2PA / Content Credentials', w.c2paPresent ? `Detected (${escapeHtml(w.c2paFormat)})` : 'Not detected'],
+      ['IPTC Digital Source Type',   w.digitalSourceType ? escapeHtml(w.digitalSourceType) : 'Not declared'],
+      ['AI Generator Fingerprints',  w.aiTools.length > 0 ? w.aiTools.map(escapeHtml).join(', ') : 'None detected'],
+    ];
+    html += `<h2>AI Watermarks &amp; Provenance</h2>
+    <table><tr><th>Check</th><th>Result</th></tr>
+    ${rows.map(([k, v]) => `<tr><td>${k}</td><td>${v}</td></tr>`).join('')}
+    </table>
+    <p style="color:#666; font-size:0.9em;"><em>
+      SynthID and invisible steganographic watermarks cannot be verified locally.
+      These results reflect declared metadata and binary signatures only.
+    </em></p>`;
   }
 
   // Metadata stripper
