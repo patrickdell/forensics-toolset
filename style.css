@@ -850,6 +850,70 @@ input[type=range]::-moz-range-thumb {
 .pivot-icon { font-size: 2rem; }
 .pivot-label { text-align: center; }
 
+/* ── Shadow Finder ────────────────────────────────────────────────────────── */
+.shadowfind-datetime {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.shadowfind-hint {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 6px;
+}
+.shadowfind-caption {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 4px;
+  line-height: 1.6;
+}
+
+/* ── Text / number / date inputs ─────────────────────────────────────────── */
+.fts-text-input {
+  background: var(--card2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 13px;
+  padding: 6px 10px;
+  outline: none;
+  transition: border-color .15s;
+  color-scheme: dark;
+}
+.fts-text-input:focus { border-color: var(--accent); }
+.fts-text-input[type=number] { width: 130px; }
+.fts-text-input[type=date]   { width: 150px; }
+.fts-text-input[type=time]   { width: 110px; }
+
+/* ── SunCalc link-out panel ──────────────────────────────────────────────── */
+.suncalc-intro {
+  max-width: 640px;
+  color: var(--muted);
+  line-height: 1.7;
+  margin-bottom: 0.75rem;
+}
+.suncalc-caveat {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 1.5rem;
+}
+.suncalc-open-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  padding: 8px 18px;
+  background: var(--accent);
+  color: #fff;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  transition: background .15s;
+}
+.suncalc-open-btn:hover { background: var(--accent-hover); }
+
 /* ── Print ────────────────────────────────────────────────────────────────── */
 @media print {
   .app-header, .fts-loader, .wizard-overlay, .site-footer,

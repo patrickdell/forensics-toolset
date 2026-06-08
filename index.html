@@ -8,6 +8,8 @@
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/exifreader@4/dist/exif-reader.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/piexifjs@1/piexif.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/suncalc@1.9.0/suncalc.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
 </head>
 <body>
 
@@ -25,6 +27,8 @@
     <button class="tab-btn" data-tab="strip">Strip</button>
     <button class="tab-btn" data-tab="noise">Noise</button>
     <button class="tab-btn" data-tab="shadow">Shadows</button>
+    <button class="tab-btn" data-tab="shadowfind">Shadow Finder</button>
+    <button class="tab-btn" data-tab="suncalc">SunCalc ↗</button>
     <button class="tab-btn" data-tab="report">Report</button>
   </nav>
   <button class="header-about-btn" id="about-btn">About</button>
@@ -46,6 +50,8 @@
   <button class="nav-drawer-item" data-tab="strip">Metadata Stripper</button>
   <button class="nav-drawer-item" data-tab="noise">Noise Analyzer</button>
   <button class="nav-drawer-item" data-tab="shadow">Shadow Plotter</button>
+  <button class="nav-drawer-item" data-tab="shadowfind">Shadow Finder</button>
+  <button class="nav-drawer-item" data-tab="suncalc">SunCalc ↗</button>
   <button class="nav-drawer-item" data-tab="report">Report</button>
   <button class="nav-drawer-item nav-drawer-wizard" id="nav-wizard-btn">🧭 Guided Analysis</button>
   <div class="nav-drawer-about">
@@ -111,8 +117,10 @@
       <button class="tool-explain-toggle" data-target="meta-explain">ⓘ About this analysis</button>
       <a class="tool-link" data-permalink="meta">Link to this tool</a>
       <div id="meta-explain" class="tool-explain" style="display:none">
-        <p>Extracts EXIF, IPTC, and XMP metadata and checks for forensic indicators: editing software, AI generation tools, timestamp anomalies, and GPS data.</p>
-        <p><strong>Important:</strong> Metadata can be added, removed, or modified without affecting pixel content, and is routinely stripped by social media platforms. Its presence or absence does not prove or disprove authenticity.</p>
+        <p>Extracts EXIF, IPTC, and XMP metadata embedded in the image file and checks for forensic indicators: editing software, AI generation tools, timestamp anomalies, and GPS coordinates.</p>
+        <p><strong>What to look for:</strong> Editing software names (Photoshop, GIMP, Lightroom); AI generation tool signatures (Midjourney, DALL-E, Stable Diffusion, ComfyUI); GPS at exactly 0°0′ ("Null Island" — likely stripped or fabricated); DateTime inconsistencies across fields; missing device info on images claiming to be phone photos.</p>
+        <p><strong>False positives and limitations:</strong> Social media platforms strip nearly all metadata on upload — absence of metadata is normal, not suspicious. Editing software tags indicate post-processing only, not manipulation. Device clocks may be set incorrectly, so timestamp anomalies can be innocent. Metadata can be added, removed, or modified without changing any pixel — its presence or absence does not prove or disprove authenticity.</p>
+        <p><strong>Further reading:</strong> <a href="https://bellingcat.gitbook.io/toolkit" target="_blank" rel="noopener">Bellingcat's Online Investigation Toolkit</a> <em>(third-party — some tools require upload or account)</em> · <a href="https://exif.regex.info/exif.cgi" target="_blank" rel="noopener">Jeffrey's Exif Viewer</a> · <a href="https://firstdraftnews.org/" target="_blank" rel="noopener">First Draft verification resources</a></p>
       </div>
     </div>
 
@@ -143,9 +151,10 @@
       <button class="tool-explain-toggle" data-target="ela-explain">ⓘ About ELA</button>
       <a class="tool-link" data-permalink="ela">Link to this tool</a>
       <div id="ela-explain" class="tool-explain" style="display:none">
-        <p>ELA re-saves the image as JPEG and measures per-pixel differences. Areas that were edited or composited often show higher error levels than undisturbed regions.</p>
-        <p><strong>Does not indicate editing:</strong> Text, sharp edges, highly-textured regions (fabric, foliage), and repeated saves at the same quality all produce high ELA values naturally.</p>
-        <p>ELA is one indicator among many and should never be used in isolation.</p>
+        <p>ELA re-saves the image as JPEG and measures per-pixel differences between the original and the re-saved version. Every JPEG save degrades quality uniformly — regions that were edited or composited from a different source have a different error baseline and appear as brighter patches in the heatmap.</p>
+        <p><strong>What to look for:</strong> Brighter or more saturated patches on smooth surfaces (faces, walls, clear sky); uneven brightness across a large uniform area; sharp-edged bright rectangles marking a paste boundary; JPEG ghosting — faint double-edges around pasted objects.</p>
+        <p><strong>False positives and limitations:</strong> Text, sharp edges, fabric, foliage, and cartoon art produce high ELA naturally. Images saved multiple times at the same quality "even out" and show falsely low ELA. Screenshots and social-media re-encodes produce uniform high noise across the whole image, making them nearly unreadable. Never use ELA as the sole basis for a conclusion.</p>
+        <p><strong>Further reading:</strong> <a href="https://fotoforensics.com/tutorial-ela.php" target="_blank" rel="noopener">FotoForensics ELA tutorial</a> · <a href="https://29a.ch/photo-forensics/" target="_blank" rel="noopener">29a.ch Forensically</a> <em>(third-party)</em> · <a href="https://bellingcat.gitbook.io/toolkit/more/all-tools/forensically" target="_blank" rel="noopener">Bellingcat: Forensically guide</a> <em>(third-party — Bellingcat caution: never rely on ELA alone)</em></p>
       </div>
     </div>
 
@@ -198,8 +207,10 @@
       <button class="tool-explain-toggle" data-target="clone-explain">ⓘ About clone detection</button>
       <a class="tool-link" data-permalink="clone">Link to this tool</a>
       <div id="clone-explain" class="tool-explain" style="display:none">
-        <p>Identifies copy-move forgery by finding visually similar regions at different positions. Matched blocks are highlighted with colour-coded overlays.</p>
-        <p><strong>Limitations:</strong> Smooth areas (sky, walls, solid colours) may produce false positives at higher sensitivity. Does not detect AI inpainting or content-aware fill. Start with Low sensitivity.</p>
+        <p>Identifies copy-move forgery by finding visually similar regions at different positions. The image is divided into overlapping 16×16 pixel blocks; feature vectors are built and sorted, then nearest-neighbour pairs are flagged as potential clones and highlighted with colour-coded overlays.</p>
+        <p><strong>What to look for:</strong> Matching colour-coded boxes far apart in the image — same colour means the same matched pair. Long connecting lines between distant regions are the most suspicious. Watch for repeated textures repositioned to fill gaps: sky patched in, crowd backgrounds duplicated, objects removed by cloning a nearby region over them.</p>
+        <p><strong>False positives and limitations:</strong> Sky, walls, solid-colour fills, and smooth gradients are legitimately similar and generate noise — especially at Medium/High sensitivity. Does not detect AI inpainting, diffusion-based content-aware fill, or frequency-domain edits. Start with Low sensitivity and increase only if specific suspicious regions warrant closer inspection.</p>
+        <p><strong>Further reading:</strong> <a href="https://29a.ch/photo-forensics/" target="_blank" rel="noopener">29a.ch Forensically</a> <em>(third-party)</em> · <a href="https://bellingcat.gitbook.io/toolkit/more/all-tools/forensically" target="_blank" rel="noopener">Bellingcat: Forensically guide</a> <em>(third-party)</em></p>
       </div>
     </div>
 
@@ -255,7 +266,9 @@
       <button class="tool-explain-toggle" data-target="strip-explain">ⓘ About metadata stripping</button>
       <a class="tool-link" data-permalink="strip">Link to this tool</a>
       <div id="strip-explain" class="tool-explain" style="display:none">
-        <p>Re-encodes the image through the browser canvas, which strips all embedded metadata. Optionally re-injects a limited set of fields after stripping.</p>
+        <p>Re-encodes the image through the browser canvas API, which discards all embedded metadata bytes. The output is a clean JPEG with no EXIF, IPTC, or XMP.</p>
+        <p><strong>Use cases:</strong> Remove GPS location before sharing; prepare a clean file for publication; preserve only copyright fields for attribution.</p>
+        <p><strong>Limitations:</strong> Canvas re-encoding introduces a small quality reduction, controlled by the quality slider. "Keep date" re-injects DateTimeOriginal only (via piexifjs) — all other fields including GPS are removed. "Keep copyright" preserves Artist, Copyright, and IPTC byline fields only; everything else is stripped.</p>
       </div>
     </div>
 
@@ -310,9 +323,9 @@
       <button class="tool-explain-toggle" data-target="noise-explain">ⓘ About noise analysis</button>
       <a class="tool-link" data-permalink="noise">Link to this tool</a>
       <div id="noise-explain" class="tool-explain" style="display:none">
-        <p>Detects compression artifacts and noise patterns by comparing each pixel to the local median. High residuals indicate noisy regions, compression artifacts, or edited areas.</p>
-        <p><strong>How it works:</strong> A 3×3 median filter is applied to every pixel. The difference between the pixel and the local median is the residual. Higher residuals suggest noise, compression, or manipulation.</p>
-        <p><strong>Interpretation:</strong> Smooth regions (sky, walls) have low residuals. Textured regions (fabric, foliage, hair) naturally have higher residuals. Compression and editing also increase residuals in affected areas.</p>
+        <p>Detects noise patterns and compression artifacts by comparing each pixel to its immediate neighbours. A 3×3 median filter is applied to the greyscale image; the difference between each pixel and its local median is its noise residual. High residuals appear red in the heatmap, low residuals appear blue.</p>
+        <p><strong>What to look for:</strong> A patch with visibly different noise texture from its surroundings — unusually smooth (denoised, airbrushed) or unusually noisy (composited from a different camera or ISO setting). Rectangular or edge-aligned noise boundaries suggest a region was copied from a different source. A face smoother than the surrounding hair and clothing suggests skin retouching.</p>
+        <p><strong>False positives and limitations:</strong> Clear sky, studio backdrops, and solid-colour areas always show low residuals (blue). Fabric, foliage, and hair always show high residuals (red) — this is natural. JPEG compressed at high quality produces very low residuals throughout. Two cameras with similar sensor noise composited together may not produce a visible noise boundary.</p>
       </div>
     </div>
 
@@ -355,9 +368,11 @@
       <button class="tool-explain-toggle" data-target="shadow-explain">ⓘ About shadow analysis</button>
       <a class="tool-link" data-permalink="shadow">Link to this tool</a>
       <div id="shadow-explain" class="tool-explain" style="display:none">
-        <p>Draw light vectors on the image to verify shadow consistency. Inconsistent shadow direction or length can indicate compositing or manipulation.</p>
-        <p><strong>How to use:</strong> Click and drag on the image to draw arrows representing light sources or shadows. The angle and distance of each vector are measured and displayed in the vector list.</p>
-        <p><strong>What to look for:</strong> All shadows in a scene should point in the same direction and have similar proportions relative to the objects casting them. Disagreement suggests multiple light sources or doctoring.</p>
+        <p>Draw directional arrows on the image to map observed shadow and light directions. All shadows in a physically consistent outdoor scene must point away from a single light source — disagreement between vectors suggests compositing or manipulation.</p>
+        <p><strong>How to use:</strong> Load an image, then click and drag on the canvas to draw arrows tracing shadow edges or light ray directions. Each vector's angle (0–360°) and pixel length are logged in the list below the canvas. Use ↶ Undo to remove the last vector, or Clear all to start over.</p>
+        <p><strong>What to look for:</strong> Vectors pointing in significantly different directions indicate different light sources — a strong indicator of compositing. Vectors that nearly agree but differ by 10–15° may indicate elements photographed at different times of day. Mismatched shadow lengths relative to object heights suggest elements from different times or locations.</p>
+        <p><strong>False positives and limitations:</strong> Multiple artificial light sources (studio lights, streetlights, windows) legitimately produce multiple shadow directions. Curved or tilted surfaces create shadows that don't follow a simple directional model. Perspective distortion can make parallel shadows appear to converge. Accuracy depends entirely on correctly identifying and tracing shadow edges.</p>
+        <p><strong>Further reading:</strong> <a href="https://www.suncalc.org/" target="_blank" rel="noopener">SunCalc.org</a> — verify sun angle for a given location and time · <a href="https://bellingcat.gitbook.io/toolkit" target="_blank" rel="noopener">Bellingcat's Online Investigation Toolkit</a> <em>(third-party — some tools require upload or account)</em></p>
       </div>
     </div>
 
@@ -416,6 +431,93 @@
     <div id="report-empty" class="fts-notice">
       <strong>No analyses completed yet.</strong> Run Metadata, ELA, or Clone Detection, then return here.
     </div>
+  </section>
+
+
+  <!-- Shadow Finder -->
+  <section id="panel-shadowfind" class="panel">
+    <h2 class="panel-title">Shadow Finder</h2>
+
+    <div class="tool-explain-wrap">
+      <button class="tool-explain-toggle" data-target="shadowfind-explain">ⓘ About Shadow Finder</button>
+      <a class="tool-link" data-permalink="shadowfind">Link to this tool</a>
+      <div id="shadowfind-explain" class="tool-explain" style="display:none">
+        <p>Shadow Finder plots all locations on Earth where a shadow of the given proportions could exist at a specific date and time. Given the height of an object and the length of its shadow (or the sun's elevation angle directly), it calculates where the sun would need to be positioned and highlights every matching location as a band on a world map.</p>
+        <p><strong>How to use:</strong> Measure or estimate the ratio of object height to shadow length visible in the image (any consistent unit — metres, pixels, steps). Enter the date and time the image was reportedly taken, in UTC. Click Find locations. The yellow band shows the best-matching locations; orange shows a 20% error band.</p>
+        <p><strong>Limitations:</strong> This tool narrows down possibilities — it does not pinpoint a single location. Cross-reference the band with visual clues (architecture, vegetation, road markings, terrain) to narrow it further. Requires an accurate UTC timestamp. Works best with outdoor, sunlit shadows cast from a perpendicular camera angle. Horizontal shadows, curved surfaces, and artificial light will give misleading results.</p>
+        <p>Algorithm ported from <a href="https://github.com/bellingcat/ShadowFinder" target="_blank" rel="noopener">Bellingcat Shadow Finder</a> by Galen Reich et al. (MIT licence). Map data: <a href="https://github.com/topojson/world-atlas" target="_blank" rel="noopener">Natural Earth via world-atlas</a>. World map tiles fetched from jsDelivr CDN on first use.</p>
+      </div>
+    </div>
+
+    <div class="controls-row" style="flex-wrap:wrap; gap:1rem 2rem; margin-top:1rem">
+      <div class="control-group">
+        <label class="control-label">Input method</label>
+        <div class="chips" id="shadowfind-mode-chips">
+          <button class="chip active" data-mode="lengths">Object &amp; shadow lengths</button>
+          <button class="chip" data-mode="angle">Sun elevation angle</button>
+        </div>
+      </div>
+      <div class="control-group">
+        <label class="control-label">Date &amp; time (UTC)</label>
+        <div class="shadowfind-datetime">
+          <input type="date" id="shadowfind-date" class="fts-text-input">
+          <input type="time" id="shadowfind-time" class="fts-text-input">
+          <span style="font-size:11px; color:var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:0.05em">UTC</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="shadowfind-lengths-group" style="margin-top:0.75rem">
+      <div class="controls-row" style="flex-wrap:wrap; gap:1rem 2rem">
+        <div class="control-group">
+          <label class="control-label" for="shadowfind-height">Object height</label>
+          <input type="number" id="shadowfind-height" class="fts-text-input" min="0.01" step="any" placeholder="e.g. 1.8">
+        </div>
+        <div class="control-group">
+          <label class="control-label" for="shadowfind-shadow">Shadow length</label>
+          <input type="number" id="shadowfind-shadow" class="fts-text-input" min="0.01" step="any" placeholder="e.g. 2.4">
+        </div>
+      </div>
+      <p class="shadowfind-hint">Any unit — only the ratio matters (metres, pixels, steps, etc.)</p>
+    </div>
+
+    <div id="shadowfind-angle-group" style="display:none; margin-top:0.75rem">
+      <div class="control-group">
+        <label class="control-label" for="shadowfind-elevation">Sun elevation angle (degrees above horizon)</label>
+        <input type="number" id="shadowfind-elevation" class="fts-text-input" min="0.1" max="90" step="0.1" placeholder="e.g. 32.5">
+      </div>
+    </div>
+
+    <div style="margin-top:1.25rem">
+      <button class="export-btn" id="shadowfind-run-btn">Find locations</button>
+    </div>
+
+    <p id="shadowfind-status" class="result-caption" style="display:none; color:var(--warning)"></p>
+
+    <div id="shadowfind-canvas-wrap" style="display:none; margin-top:1.5rem; overflow:auto; border:1px solid var(--line); border-radius:var(--radius)">
+      <canvas id="shadowfind-canvas"></canvas>
+    </div>
+  </section>
+
+  <!-- SunCalc link-out -->
+  <section id="panel-suncalc" class="panel">
+    <h2 class="panel-title">SunCalc</h2>
+
+    <div class="tool-explain-wrap">
+      <a class="tool-link" data-permalink="suncalc">Link to this tool</a>
+    </div>
+
+    <p class="suncalc-intro">
+      SunCalc shows the exact position of the sun in the sky for any location on Earth at any date and time. Enter a location and timestamp to see the sun's altitude angle and compass direction — then cross-reference these values with the shadow vectors you drew in the <strong>Shadows</strong> tab to verify whether an image's shadows are consistent with its claimed time and place.
+    </p>
+    <p class="suncalc-intro" style="margin-top:0.5rem">
+      You can also use SunCalc in reverse: mark multiple candidate locations from the Shadow Finder band and check which one produces a sun angle that matches the shadow directions and lengths visible in the image.
+    </p>
+    <p class="suncalc-caveat">SunCalc is a third-party tool by <a href="https://mourner.github.io/" target="_blank" rel="noopener">Vladimir Agafonkin</a>. No image data is sent — you only enter a location and date. The tool runs in your browser.</p>
+
+    <a href="https://www.suncalc.org/" target="_blank" rel="noopener" class="suncalc-open-btn">
+      Open SunCalc ↗
+    </a>
   </section>
 
 </main>

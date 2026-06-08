@@ -11,101 +11,91 @@ let vectors = [];
 let selectedVector = null;
 
 export function initShadow() {
-  // Wire tool buttons once
   document.getElementById('shadow-clear-btn').addEventListener('click', clearVectors);
   document.getElementById('shadow-undo-btn').addEventListener('click', undoVector);
   document.getElementById('shadow-export-btn').addEventListener('click', exportShadowMap);
 
-  // Wire mode toggles
-  document.getElementById('shadow-mode-chips').querySelectorAll('.chip').forEach(chip => {
-    chip.addEventListener('click', () => {
-      const container = document.getElementById('shadow-mode-chips');
-      container.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-      chip.classList.add('active');
-    });
-  });
+  // Wire canvas listeners once — guard against no image in each handler
+  const canvas = document.getElementById('shadow-canvas');
+  canvas.addEventListener('mousedown', onCanvasMouseDown);
+  canvas.addEventListener('mousemove', onCanvasMouseMove);
+  canvas.addEventListener('mouseup', onCanvasMouseUp);
+  canvas.addEventListener('mouseleave', onCanvasMouseLeave);
 
   document.addEventListener('fts:loaded', setupShadow);
 }
 
 async function setupShadow() {
-  const controlsEl = document.getElementById('shadow-controls');
-  const statusEl = document.getElementById('shadow-status');
-  const canvasWrapEl = document.getElementById('shadow-canvas-wrap');
+  const controlsEl     = document.getElementById('shadow-controls');
+  const statusEl       = document.getElementById('shadow-status');
+  const canvasWrapEl   = document.getElementById('shadow-canvas-wrap');
+  const vectorSection  = document.getElementById('shadow-vector-section');
 
   if (!img.file) {
-    controlsEl.style.display = 'none';
+    controlsEl.style.display   = 'none';
     canvasWrapEl.style.display = 'none';
-    statusEl.style.display = 'block';
+    vectorSection.style.display = 'none';
+    statusEl.style.display     = 'block';
     return;
   }
 
-  controlsEl.style.display = 'block';
-  statusEl.style.display = 'none';
+  controlsEl.style.display    = 'block';
+  canvasWrapEl.style.display  = 'block';
+  vectorSection.style.display = 'block';
+  statusEl.style.display      = 'none';
 
   // Initialize canvas
   const canvas = document.getElementById('shadow-canvas');
-  canvas.width = img.bitmap.width;
+  canvas.width  = img.bitmap.width;
   canvas.height = img.bitmap.height;
 
   const ctx = canvas.getContext('2d');
   ctx.drawImage(img.bitmap, 0, 0);
 
-  // Reset vectors
+  // Reset state
   vectors = [];
   selectedVector = null;
-  canvasWrapEl.style.display = 'block';
-
-  // Wire canvas events
-  canvas.addEventListener('mousedown', onCanvasMouseDown);
-  canvas.addEventListener('mousemove', onCanvasMouseMove);
-  canvas.addEventListener('mouseup', onCanvasMouseUp);
-  canvas.addEventListener('mouseleave', onCanvasMouseLeave);
+  updateVectorList();
 }
 
 function onCanvasMouseDown(e) {
+  if (!img.bitmap) return;
+
   const canvas = document.getElementById('shadow-canvas');
-  const rect = canvas.getBoundingClientRect();
+  const rect   = canvas.getBoundingClientRect();
   const scaleX = canvas.width / rect.width;
   const scaleY = canvas.height / rect.height;
 
-  startX = (e.clientX - rect.left) * scaleX;
-  startY = (e.clientY - rect.top) * scaleY;
-
+  startX    = (e.clientX - rect.left) * scaleX;
+  startY    = (e.clientY - rect.top)  * scaleY;
   isDrawing = true;
 }
 
 function onCanvasMouseMove(e) {
-  if (!isDrawing) return;
+  if (!img.bitmap || !isDrawing) return;
 
-  const canvas = document.getElementById('shadow-canvas');
-  const rect = canvas.getBoundingClientRect();
-  const scaleX = canvas.width / rect.width;
-  const scaleY = canvas.height / rect.height;
-
+  const canvas   = document.getElementById('shadow-canvas');
+  const rect     = canvas.getBoundingClientRect();
+  const scaleX   = canvas.width  / rect.width;
+  const scaleY   = canvas.height / rect.height;
   const currentX = (e.clientX - rect.left) * scaleX;
-  const currentY = (e.clientY - rect.top) * scaleY;
+  const currentY = (e.clientY - rect.top)  * scaleY;
 
-  // Redraw canvas with preview
   redrawShadowCanvas();
-
-  // Draw preview vector
   const ctx = canvas.getContext('2d');
   drawVector(ctx, startX, startY, currentX, currentY, '#4d9fff', true);
 }
 
 function onCanvasMouseUp(e) {
-  if (!isDrawing) return;
+  if (!img.bitmap || !isDrawing) return;
 
   const canvas = document.getElementById('shadow-canvas');
-  const rect = canvas.getBoundingClientRect();
-  const scaleX = canvas.width / rect.width;
+  const rect   = canvas.getBoundingClientRect();
+  const scaleX = canvas.width  / rect.width;
   const scaleY = canvas.height / rect.height;
+  const endX   = (e.clientX - rect.left) * scaleX;
+  const endY   = (e.clientY - rect.top)  * scaleY;
 
-  const endX = (e.clientX - rect.left) * scaleX;
-  const endY = (e.clientY - rect.top) * scaleY;
-
-  // Only add if meaningful distance
   const dist = Math.hypot(endX - startX, endY - startY);
   if (dist > 10) {
     const angle = Math.atan2(endY - startY, endX - startX) * (180 / Math.PI);
@@ -118,6 +108,7 @@ function onCanvasMouseUp(e) {
 }
 
 function onCanvasMouseLeave() {
+  if (!img.bitmap) return;
   if (isDrawing) {
     isDrawing = false;
     redrawShadowCanvas();
@@ -126,12 +117,10 @@ function onCanvasMouseLeave() {
 
 function redrawShadowCanvas() {
   const canvas = document.getElementById('shadow-canvas');
-  const ctx = canvas.getContext('2d');
+  const ctx    = canvas.getContext('2d');
 
-  // Redraw original image
   ctx.drawImage(img.bitmap, 0, 0);
 
-  // Redraw all vectors
   vectors.forEach((v, idx) => {
     const colour = selectedVector === idx ? '#ffaa00' : '#3ecf8e';
     drawVector(ctx, v.startX, v.startY, v.endX, v.endY, colour, false);
@@ -142,18 +131,16 @@ function drawVector(ctx, x1, y1, x2, y2, colour, isPreview) {
   const lineWidth = isPreview ? 2 : 3;
   const arrowSize = 15;
 
-  ctx.strokeStyle = colour;
-  ctx.fillStyle = colour;
-  ctx.lineWidth = lineWidth;
-  ctx.globalAlpha = isPreview ? 0.6 : 0.8;
+  ctx.strokeStyle  = colour;
+  ctx.fillStyle    = colour;
+  ctx.lineWidth    = lineWidth;
+  ctx.globalAlpha  = isPreview ? 0.6 : 0.8;
 
-  // Draw line
   ctx.beginPath();
   ctx.moveTo(x1, y1);
   ctx.lineTo(x2, y2);
   ctx.stroke();
 
-  // Draw arrowhead
   const angle = Math.atan2(y2 - y1, x2 - x1);
   ctx.beginPath();
   ctx.moveTo(x2, y2);
@@ -162,7 +149,6 @@ function drawVector(ctx, x1, y1, x2, y2, colour, isPreview) {
   ctx.closePath();
   ctx.fill();
 
-  // Draw start dot
   ctx.fillStyle = colour;
   ctx.beginPath();
   ctx.arc(x1, y1, 5, 0, Math.PI * 2);
@@ -207,7 +193,6 @@ function updateVectorList() {
     listEl.appendChild(item);
   });
 
-  // Update count
   document.getElementById('shadow-count').textContent = vectors.length;
 }
 
@@ -231,11 +216,11 @@ function undoVector() {
 
 async function exportShadowMap() {
   const canvas = document.getElementById('shadow-canvas');
-  const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+  const blob   = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
 
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
+  const a   = document.createElement('a');
+  a.href     = url;
   a.download = `${img.name.replace(/\.[^.]+$/, '')}_shadow-vectors.png`;
   document.body.appendChild(a);
   a.click();

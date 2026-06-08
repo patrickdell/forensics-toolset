@@ -7,8 +7,9 @@ import { initELA }      from './ela.js';
 import { initClone }    from './clone.js';
 import { initStrip }    from './strip.js';
 import { initNoise }    from './noise.js';
-import { initShadow }   from './shadow.js';
-import { initReport }   from './report.js';
+import { initShadow }     from './shadow.js';
+import { initShadowFind } from './shadowfind.js';
+import { initReport }     from './report.js';
 import { setupDropzone } from './utils.js';
 
 // ── Shared image state ────────────────────────────────────────────────────────
@@ -28,8 +29,10 @@ const panels = {
   clone:    'panel-clone',
   strip:    'panel-strip',
   noise:    'panel-noise',
-  shadow:   'panel-shadow',
-  report:   'panel-report',
+  shadow:      'panel-shadow',
+  shadowfind:  'panel-shadowfind',
+  suncalc:     'panel-suncalc',
+  report:      'panel-report',
 };
 
 function setActivePanel(tabName) {
@@ -260,4 +263,5 @@ initClone();
 initStrip();
 initNoise();
 initShadow();
+initShadowFind();
 initReport();
