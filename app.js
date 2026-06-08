@@ -198,12 +198,20 @@ function updateWizardUI() {
   // Show correct panel
   setActivePanel(step.key);
 
-  // Open explanations in wizard mode
+  // Open explanations in wizard mode (they appear at the bottom via CSS order)
   const panel = document.getElementById(panels[step.key]);
   if (panel) {
     panel.querySelectorAll('.tool-explain').forEach(el => {
       el.style.display = 'block';
     });
+  }
+
+  // Auto-run analyses that require a button click
+  if (step.key === 'clone') {
+    setTimeout(() => {
+      const btn = document.getElementById('clone-analyse-btn');
+      if (btn && !btn.disabled) btn.click();
+    }, 150);
   }
 
   const nextBtn = document.getElementById('wizard-next');
@@ -219,12 +227,14 @@ function openWizard() {
   }
   wizardStep = 0;
   wizardOverlay.style.display = 'block';
+  document.body.classList.add('wizard-mode');
   updateWizardUI();
   closeDrawer();
 }
 
 function closeWizard() {
   wizardOverlay.style.display = 'none';
+  document.body.classList.remove('wizard-mode');
 }
 
 document.getElementById('wizard-btn').addEventListener('click', openWizard);

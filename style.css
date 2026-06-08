@@ -314,6 +314,18 @@ fieldset { border: none; padding: 0; }
 }
 .panel { display: none; }
 .panel.visible { display: block; }
+
+/* In wizard mode, push the explain box to the bottom of each panel */
+body.wizard-mode .panel.visible {
+  display: flex;
+  flex-direction: column;
+}
+body.wizard-mode .panel.visible .tool-explain-wrap {
+  order: 100;
+  margin-top: 2rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--line);
+}
 .panel-title {
   font-size: 1.25rem;
   font-weight: 700;
