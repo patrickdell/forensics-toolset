@@ -770,6 +770,14 @@ input[type=range]::-moz-range-thumb {
   font-size: 12px;
   color: var(--muted);
 }
+.shadow-vector-swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 1px solid rgba(255,255,255,0.2);
+}
 .shadow-vector-label { font-weight: 600; color: var(--ink); }
 .shadow-vector-angle, .shadow-vector-distance {
   font-family: 'SF Mono', 'Fira Mono', monospace;
@@ -850,24 +858,19 @@ input[type=range]::-moz-range-thumb {
 .pivot-icon { font-size: 2rem; }
 .pivot-label { text-align: center; }
 
-/* ── Shadow Finder ────────────────────────────────────────────────────────── */
-.shadowfind-datetime {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
+/* ── Shadow colour swatches ───────────────────────────────────────────────── */
+.shadow-colour-chip {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  background-color: var(--swatch-color) !important;
+  border-color: transparent !important;
+  border-radius: 50%;
+  flex-shrink: 0;
+  color: transparent;
 }
-.shadowfind-hint {
-  font-size: 12px;
-  color: var(--muted);
-  margin-top: 6px;
-}
-.shadowfind-caption {
-  font-size: 12px;
-  color: var(--muted);
-  margin-top: 4px;
-  line-height: 1.6;
-}
+.shadow-colour-chip:hover  { border-color: var(--muted) !important; }
+.shadow-colour-chip.active { border-color: var(--ink) !important; box-shadow: 0 0 0 2px var(--accent); }
 
 /* ── Text / number / date inputs ─────────────────────────────────────────── */
 .fts-text-input {

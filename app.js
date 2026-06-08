@@ -8,7 +8,6 @@ import { initClone }    from './clone.js';
 import { initStrip }    from './strip.js';
 import { initNoise }    from './noise.js';
 import { initShadow }     from './shadow.js';
-import { initShadowFind } from './shadowfind.js';
 import { initReport }     from './report.js';
 import { setupDropzone } from './utils.js';
 
@@ -30,7 +29,6 @@ const panels = {
   strip:    'panel-strip',
   noise:    'panel-noise',
   shadow:      'panel-shadow',
-  shadowfind:  'panel-shadowfind',
   suncalc:     'panel-suncalc',
   report:      'panel-report',
 };
@@ -263,5 +261,4 @@ initClone();
 initStrip();
 initNoise();
 initShadow();
-initShadowFind();
 initReport();
