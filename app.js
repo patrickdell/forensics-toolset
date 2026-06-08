@@ -31,6 +31,7 @@ const panels = {
   noise:    'panel-noise',
   shadow:      'panel-shadow',
   watermark:   'panel-watermark',
+  synthid:     'panel-synthid',
   suncalc:     'panel-suncalc',
   report:      'panel-report',
 };

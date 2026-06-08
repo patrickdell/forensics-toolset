@@ -978,7 +978,7 @@ input[type=range]::-moz-range-thumb {
   font-weight: 600;
   transition: background .15s;
 }
-.suncalc-open-btn:hover { background: var(--accent-hover); }
+.suncalc-open-btn:hover { background: var(--accent-hover); color: #fff; }
 
 /* ── Print ────────────────────────────────────────────────────────────────── */
 @media print {
