@@ -9,7 +9,6 @@ import { initStrip }    from './strip.js';
 import { initNoise }    from './noise.js';
 import { initShadow }     from './shadow.js';
 import { initWatermark }  from './watermark.js';
-import { initReport }     from './report.js';
 import { setupDropzone } from './utils.js';
 
 // ── Shared image state ────────────────────────────────────────────────────────
@@ -46,7 +45,6 @@ const panels = {
   synthid:     'panel-synthid',
   weather:     'panel-weather',
   suncalc:     'panel-suncalc',
-  report:      'panel-report',
 };
 
 function setActivePanel(tabName) {
@@ -200,7 +198,6 @@ const wizardSteps = [
   { key: 'ela',       title: 'ELA' },
   { key: 'clone',     title: 'Clone Detection' },
   { key: 'watermark', title: 'AI Watermarks' },
-  { key: 'report',    title: 'Report' },
 ];
 let wizardStep = 0;
 
@@ -292,4 +289,3 @@ initStrip();
 initNoise();
 initShadow();
 initWatermark();
-initReport();

@@ -31,7 +31,6 @@
     <button class="tab-btn" data-tab="synthid" role="tab" aria-selected="false">SynthID ↗</button>
     <button class="tab-btn" data-tab="weather" role="tab" aria-selected="false">Weather History ↗</button>
     <button class="tab-btn" data-tab="suncalc" role="tab" aria-selected="false">SunCalc ↗</button>
-    <button class="tab-btn" data-tab="report" role="tab" aria-selected="false">Report</button>
   </nav>
   <button class="header-about-btn" id="about-btn">About</button>
   <button class="nav-hamburger" id="nav-hamburger" aria-label="Open menu">
@@ -56,8 +55,7 @@
   <button class="nav-drawer-item" data-tab="synthid">SynthID ↗</button>
   <button class="nav-drawer-item" data-tab="weather">Weather History ↗</button>
   <button class="nav-drawer-item" data-tab="suncalc">SunCalc ↗</button>
-  <button class="nav-drawer-item" data-tab="report">Report</button>
-  <button class="nav-drawer-item nav-drawer-wizard" id="nav-wizard-btn">🧭 Guided Analysis</button>
+<button class="nav-drawer-item nav-drawer-wizard" id="nav-wizard-btn">🧭 Guided Analysis</button>
   <div class="nav-drawer-about">
     <strong>Forensics Toolset</strong>
     All processing happens in your browser — nothing is uploaded.
@@ -424,36 +422,6 @@
 
     <div id="shadow-status" class="fts-notice" style="display:none">
       <strong>No image loaded.</strong> Drop or browse an image above to begin.
-    </div>
-  </section>
-
-  <!-- Report -->
-  <section id="panel-report" class="panel">
-    <h2 class="panel-title">Forensic Report</h2>
-
-    <div class="tool-explain-wrap">
-      <button class="tool-explain-toggle" data-target="report-explain">ⓘ About the report</button>
-      <a class="tool-link" data-permalink="report">Link to this tool</a>
-      <div id="report-explain" class="tool-explain" style="display:none">
-        <p>Compiles findings from all completed analyses into a printable document. Use your browser's Print → Save as PDF to export.</p>
-        <p><strong>Disclaimer:</strong> This is an automated analysis to assist human review. Findings are indicators only and must be interpreted by a qualified analyst.</p>
-      </div>
-    </div>
-
-    <div id="report-status" style="display:none">
-      <h3 class="section-label">Completed analyses</h3>
-      <div id="report-checklist" class="report-checklist"></div>
-    </div>
-
-    <div id="report-preview" class="report-preview" style="display:none">
-      <div id="report-content"></div>
-      <button class="export-btn" id="report-print-btn" style="margin-top:1.25rem">
-        🖨️ Print / Save as PDF
-      </button>
-    </div>
-
-    <div id="report-empty" class="fts-notice">
-      <strong>No analyses completed yet.</strong> Run Metadata, ELA, or Clone Detection, then return here.
     </div>
   </section>
 
