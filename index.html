@@ -6,6 +6,8 @@
   <title>Forensics Toolset</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="stylesheet" href="style.css">
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/exifreader@4/dist/exif-reader.min.js" as="script">
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/piexifjs@1/piexif.js" as="script">
   <script src="https://cdn.jsdelivr.net/npm/exifreader@4/dist/exif-reader.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/piexifjs@1/piexif.js"></script>
 </head>
@@ -18,17 +20,18 @@
     <span class="wizard-optional-tag">optional</span>
   </button>
   <h1 class="app-title">Forensics Toolset</h1>
-  <nav class="tabs" id="main-tabs">
-    <button class="tab-btn active" data-tab="meta">Metadata</button>
-    <button class="tab-btn" data-tab="ela">ELA</button>
-    <button class="tab-btn" data-tab="clone">Clone Detection</button>
-    <button class="tab-btn" data-tab="strip">Strip</button>
-    <button class="tab-btn" data-tab="noise">Noise</button>
-    <button class="tab-btn" data-tab="shadow">Shadows</button>
-    <button class="tab-btn" data-tab="watermark">AI Watermarks</button>
-    <button class="tab-btn" data-tab="synthid">SynthID ↗</button>
-    <button class="tab-btn" data-tab="suncalc">SunCalc ↗</button>
-    <button class="tab-btn" data-tab="report">Report</button>
+  <nav class="tabs" id="main-tabs" role="tablist">
+    <button class="tab-btn active" data-tab="meta" role="tab" aria-selected="true">Metadata</button>
+    <button class="tab-btn" data-tab="ela" role="tab" aria-selected="false">ELA</button>
+    <button class="tab-btn" data-tab="clone" role="tab" aria-selected="false">Clone Detection</button>
+    <button class="tab-btn" data-tab="noise" role="tab" aria-selected="false">Noise</button>
+    <button class="tab-btn" data-tab="shadow" role="tab" aria-selected="false">Shadows</button>
+    <button class="tab-btn" data-tab="watermark" role="tab" aria-selected="false">AI Watermarks</button>
+    <button class="tab-btn" data-tab="strip" role="tab" aria-selected="false">Strip</button>
+    <button class="tab-btn" data-tab="synthid" role="tab" aria-selected="false">SynthID ↗</button>
+    <button class="tab-btn" data-tab="weather" role="tab" aria-selected="false">Weather History ↗</button>
+    <button class="tab-btn" data-tab="suncalc" role="tab" aria-selected="false">SunCalc ↗</button>
+    <button class="tab-btn" data-tab="report" role="tab" aria-selected="false">Report</button>
   </nav>
   <button class="header-about-btn" id="about-btn">About</button>
   <button class="nav-hamburger" id="nav-hamburger" aria-label="Open menu">
@@ -46,11 +49,12 @@
   <button class="nav-drawer-item" data-tab="meta">Metadata</button>
   <button class="nav-drawer-item" data-tab="ela">ELA</button>
   <button class="nav-drawer-item" data-tab="clone">Clone Detection</button>
-  <button class="nav-drawer-item" data-tab="strip">Metadata Stripper</button>
   <button class="nav-drawer-item" data-tab="noise">Noise Analyzer</button>
   <button class="nav-drawer-item" data-tab="shadow">Shadow Plotter</button>
   <button class="nav-drawer-item" data-tab="watermark">AI Watermarks</button>
+  <button class="nav-drawer-item" data-tab="strip">Metadata Stripper</button>
   <button class="nav-drawer-item" data-tab="synthid">SynthID ↗</button>
+  <button class="nav-drawer-item" data-tab="weather">Weather History ↗</button>
   <button class="nav-drawer-item" data-tab="suncalc">SunCalc ↗</button>
   <button class="nav-drawer-item" data-tab="report">Report</button>
   <button class="nav-drawer-item nav-drawer-wizard" id="nav-wizard-btn">🧭 Guided Analysis</button>
@@ -162,7 +166,7 @@
     <div id="ela-controls" class="controls-row" style="display:none">
       <div class="control-group">
         <label class="control-label">Re-save quality</label>
-        <div class="chips" id="ela-quality-chips">
+        <div class="chips" id="ela-quality-chips" role="group" aria-label="JPEG re-encode quality">
           <button class="chip" data-quality="75">75</button>
           <button class="chip" data-quality="90">90</button>
           <button class="chip" data-quality="95">95</button>
@@ -170,7 +174,7 @@
       </div>
       <div class="control-group">
         <label class="control-label">Amplification</label>
-        <div class="chips" id="ela-amp-chips">
+        <div class="chips" id="ela-amp-chips" role="group" aria-label="ELA amplification">
           <button class="chip" data-amp="5">5×</button>
           <button class="chip" data-amp="10">10×</button>
           <button class="chip" data-amp="15">15×</button>
@@ -179,7 +183,7 @@
       </div>
       <div class="control-group">
         <label class="control-label">Display</label>
-        <div class="chips" id="ela-display-chips">
+        <div class="chips" id="ela-display-chips" role="group" aria-label="ELA display mode">
           <button class="chip" data-display="ela-only">ELA only</button>
           <button class="chip" data-display="side-by-side">Side by side</button>
           <button class="chip" data-display="overlay">Overlay</button>
@@ -219,7 +223,7 @@
       <div class="controls-row">
         <div class="control-group">
           <label class="control-label">Sensitivity</label>
-          <div class="chips" id="clone-sensitivity-chips">
+          <div class="chips" id="clone-sensitivity-chips" role="group" aria-label="Clone detection sensitivity">
             <button class="chip" data-sensitivity="low">Low</button>
             <button class="chip" data-sensitivity="medium">Medium</button>
             <button class="chip" data-sensitivity="high">High</button>
@@ -334,7 +338,7 @@
       <div class="controls-row">
         <div class="control-group">
           <label class="control-label">Amplification</label>
-          <div class="chips" id="noise-amp-chips">
+          <div class="chips" id="noise-amp-chips" role="group" aria-label="Noise amplification">
             <button class="chip" data-amp="1">1×</button>
             <button class="chip" data-amp="2">2×</button>
             <button class="chip" data-amp="3">3×</button>
@@ -381,7 +385,7 @@
       <div class="controls-row" style="flex-wrap:wrap; align-items:flex-start; gap:0.75rem 1.5rem">
         <div class="control-group">
           <label class="control-label">Colour</label>
-          <div class="chips" id="shadow-colour-chips">
+          <div class="chips" id="shadow-colour-chips" role="group" aria-label="Vector colour">
             <button class="chip shadow-colour-chip active" data-colour="#ffff50" style="--swatch-color:#ffff50" title="Yellow"></button>
             <button class="chip shadow-colour-chip" data-colour="#ff5f5f" style="--swatch-color:#ff5f5f" title="Red"></button>
             <button class="chip shadow-colour-chip" data-colour="#4dd8ff" style="--swatch-color:#4dd8ff" title="Cyan"></button>
@@ -391,7 +395,7 @@
         </div>
         <div class="control-group">
           <label class="control-label">Size</label>
-          <div class="chips" id="shadow-size-chips">
+          <div class="chips" id="shadow-size-chips" role="group" aria-label="Vector size">
             <button class="chip" data-size="2">S</button>
             <button class="chip active" data-size="4">M</button>
             <button class="chip" data-size="8">L</button>
@@ -509,6 +513,29 @@
         Developer docs ↗
       </a>
     </div>
+  </section>
+
+  <!-- Weather History link-out -->
+  <section id="panel-weather" class="panel">
+    <h2 class="panel-title">Weather History</h2>
+
+    <div class="tool-explain-wrap">
+      <a class="tool-link" data-permalink="weather">Link to this tool</a>
+    </div>
+
+    <p class="suncalc-intro">
+      Visual Crossing Weather History provides hourly historical weather conditions — cloud cover, precipitation, temperature, wind speed, and visibility — for any location on Earth going back decades. Use it to cross-reference the timestamp and GPS location from an image's metadata against the weather conditions visible in the photograph: snow, wet ground, bare vs. leafy trees, clothing choices, and lighting quality can all be verified or contradicted by the historical record.
+    </p>
+    <p class="suncalc-intro" style="margin-top:0.5rem">
+      Enter the claimed location and date from the image's EXIF data, then compare the reported conditions with what you can see in the photograph. Inconsistencies — summer clothing in a blizzard, dry ground on a reported rainy day — are strong indicators that the claimed metadata is inaccurate.
+    </p>
+    <p class="suncalc-caveat">
+      Visual Crossing is a third-party service. No image data is sent — you enter a location and date only. A free account provides limited queries; a paid plan is required for bulk historical access.
+    </p>
+
+    <a href="https://www.visualcrossing.com/weather-history/" target="_blank" rel="noopener" class="suncalc-open-btn">
+      Open Weather History ↗
+    </a>
   </section>
 
   <!-- SunCalc link-out -->

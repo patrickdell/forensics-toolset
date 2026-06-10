@@ -644,14 +644,52 @@ input[type=range]::-moz-range-thumb {
 }
 
 /* ── Report ───────────────────────────────────────────────────────────────── */
-.report-checklist { display: flex; flex-direction: column; gap: 6px; margin-bottom: 20px; }
+.report-checklist { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
 .report-status-item {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   font-size: 13px;
-  color: var(--muted);
+  flex-wrap: wrap;
 }
+.report-item-status { flex-shrink: 0; font-size: 14px; width: 16px; text-align: center; }
+.report-item-done    { color: var(--success); }
+.report-item-pending { color: var(--muted); }
+.report-item-name--muted { color: var(--muted); }
+
+/* checkbox + name label */
+.report-item-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  color: var(--ink);
+  flex-shrink: 0;
+}
+.report-include-cb {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+/* analyst note input */
+.report-note-input {
+  flex: 1;
+  min-width: 140px;
+  background: var(--card2);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  color: var(--ink);
+  font-size: 12px;
+  padding: 4px 8px;
+  outline: none;
+}
+.report-note-input:focus {
+  border-color: var(--accent);
+}
+.report-note-input::placeholder { color: var(--muted); }
+
 .report-preview {
   padding: 20px;
   background: var(--code-bg);

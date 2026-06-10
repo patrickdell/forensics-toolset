@@ -4,9 +4,11 @@
  */
 
 import { img, results } from './app.js';
-import { setProgress } from './utils.js';
+import { setProgress, debounce } from './utils.js';
 
 let noiseAmplification = 3;
+
+const _debouncedRunNoise = debounce(() => runNoiseAnalysis(), 200);
 
 export function initNoise() {
   // Wire amplification chips once
@@ -18,7 +20,7 @@ export function initNoise() {
       const container = document.getElementById('noise-amp-chips');
       container.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
       chip.classList.add('active');
-      runNoiseAnalysis();
+      _debouncedRunNoise();
     });
   });
 

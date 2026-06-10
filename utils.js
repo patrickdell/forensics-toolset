@@ -75,3 +75,12 @@ export async function sha256(buffer) {
   const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
   return [...new Uint8Array(hashBuffer)].map(b => b.toString(16).padStart(2, '0')).join('');
 }
+
+/** Returns a debounced version of fn — delays execution until ms have passed since the last call. */
+export function debounce(fn, ms = 200) {
+  let timer;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), ms);
+  };
+}

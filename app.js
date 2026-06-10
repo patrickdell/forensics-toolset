@@ -22,6 +22,18 @@ export const results = {
   meta: null, ela: null, noise: null, clone: null, strip: null, watermark: null,
 };
 
+// ── ExifReader cache (avoid parsing arrayBuffer twice per image) ──────────────
+/* global ExifReader */
+let _exifCache = null;
+export function getExifData() {
+  if (!_exifCache) {
+    _exifCache = ExifReader.load(img.arrayBuffer, { expanded: true })
+      .then(d => d || {})
+      .catch(() => ({}));
+  }
+  return _exifCache;
+}
+
 // ── Panel routing ─────────────────────────────────────────────────────────────
 const panels = {
   meta:     'panel-meta',
@@ -32,6 +44,7 @@ const panels = {
   shadow:      'panel-shadow',
   watermark:   'panel-watermark',
   synthid:     'panel-synthid',
+  weather:     'panel-weather',
   suncalc:     'panel-suncalc',
   report:      'panel-report',
 };
@@ -43,7 +56,9 @@ function setActivePanel(tabName) {
   });
   document.getElementById(panels[tabName])?.classList.add('visible');
   document.querySelectorAll('.tab-btn, .nav-drawer-item[data-tab]').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.tab === tabName);
+    const isActive = btn.dataset.tab === tabName;
+    btn.classList.toggle('active', isActive);
+    if (btn.hasAttribute('aria-selected')) btn.setAttribute('aria-selected', String(isActive));
   });
   history.replaceState(null, '', '#' + tabName);
   localStorage.setItem('fts_tab', tabName);
@@ -75,6 +90,7 @@ document.addEventListener('click', e => {
 async function loadImage(file) {
   if (!file || !file.type.startsWith('image/')) return;
 
+  _exifCache = null;   // invalidate ExifReader cache for new image
   img.file        = file;
   img.name        = file.name;
   img.type        = file.type;

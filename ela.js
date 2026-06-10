@@ -3,30 +3,32 @@
  */
 
 import { img, results } from './app.js';
-import { setActiveChip } from './utils.js';
+import { setActiveChip, debounce } from './utils.js';
 
 let currentELA = null;
 let elaQuality = 75;
 let elaAmplification = 15;
 let elaDisplay = 'ela-only';
 
+const _debouncedRunELA = debounce(() => runELA(), 200);
+
 export function initELA() {
   // Wire chip listeners once — safe to call before any image is loaded
   document.getElementById('ela-quality-chips').querySelectorAll('.chip').forEach(chip => {
     chip.classList.toggle('active', chip.dataset.quality === String(elaQuality));
-    chip.addEventListener('click', async () => {
+    chip.addEventListener('click', () => {
       elaQuality = parseInt(chip.dataset.quality);
       setActiveChip(document.getElementById('ela-quality-chips'), chip);
-      await runELA();
+      _debouncedRunELA();
     });
   });
 
   document.getElementById('ela-amp-chips').querySelectorAll('.chip').forEach(chip => {
     chip.classList.toggle('active', chip.dataset.amp === String(elaAmplification));
-    chip.addEventListener('click', async () => {
+    chip.addEventListener('click', () => {
       elaAmplification = parseInt(chip.dataset.amp);
       setActiveChip(document.getElementById('ela-amp-chips'), chip);
-      await runELA();
+      _debouncedRunELA();
     });
   });
 

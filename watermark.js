@@ -13,9 +13,7 @@
  * All processing is in-browser. No data is sent anywhere.
  */
 
-/* global ExifReader */
-
-import { img, results } from './app.js';
+import { img, results, getExifData } from './app.js';
 import { escapeHtml } from './utils.js';
 
 // ── IPTC cv.iptc.org/newscodes/digitalsourcetype/ → label + severity ──────────
@@ -68,14 +66,8 @@ async function runWatermarkChecks() {
   // ── 1. C2PA binary scan ────────────────────────────────────────────────────
   const c2pa = detectC2PABytes(img.arrayBuffer, img.type);
 
-  // ── 2. XMP metadata checks ────────────────────────────────────────────────
-  let flatExif = {};
-  try {
-    const parsed = await ExifReader.load(img.arrayBuffer, { expanded: true });
-    flatExif = flattenExif(parsed || {});
-  } catch (e) {
-    console.warn('ExifReader in watermark.js:', e);
-  }
+  // ── 2. XMP metadata checks (shared cache — no double-parse) ──────────────
+  const flatExif = flattenExif(await getExifData());
 
   const dst    = detectDigitalSourceType(flatExif);
   const aiSoft = detectAIFingerprints(flatExif);

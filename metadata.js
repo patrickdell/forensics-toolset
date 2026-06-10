@@ -2,7 +2,7 @@
  * metadata.js — EXIF/IPTC/XMP extraction + forensic flag checks
  */
 
-import { img, results } from './app.js';
+import { img, results, getExifData } from './app.js';
 import { sha256, formatBytes, escapeHtml } from './utils.js';
 
 export function initMetadata() {
@@ -49,14 +49,8 @@ async function analyzeMetadata() {
     // Compute SHA-256
     const hashHex = await sha256(img.arrayBuffer);
 
-    // Extract metadata with ExifReader
-    let exifData = {};
-    try {
-      const parsed = await ExifReader.load(img.arrayBuffer, { expanded: true });
-      exifData = parsed || {};
-    } catch (e) {
-      console.warn('ExifReader error:', e);
-    }
+    // Extract metadata via shared cache (avoids double-parse when watermark.js also runs)
+    const exifData = await getExifData();
 
     // Flatten exif data for easier access
     const flatExif = flattenExif(exifData);
