@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "forensics-toolset",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "-p", "4900", "."],
+      "port": 4900
+    }
+  ]
+}
