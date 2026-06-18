@@ -96,6 +96,7 @@ async function loadImage(file) {
   img.arrayBuffer = await file.arrayBuffer();
 
   try {
+    img.bitmap?.close();   // release previous ImageBitmap before replacing
     img.bitmap = await createImageBitmap(file);
   } catch (e) {
     console.error('Failed to create bitmap:', e);

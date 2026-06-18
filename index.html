@@ -70,9 +70,9 @@
     <strong>Forensics Toolset</strong>
     All processing happens in your browser — nothing is uploaded.
     <div class="nav-drawer-links">
-      <a href="https://visuals-toolset.pages.dev" target="_blank" rel="noopener">Visuals Toolset</a>
-      <a href="https://github.com/patrickdell/forensics-toolset" target="_blank" rel="noopener">GitHub</a>
-      <a href="https://patrickdell.ca" target="_blank" rel="noopener">patrickdell.ca</a>
+      <a href="https://visuals-toolset.pages.dev" target="_blank" rel="noopener noreferrer">Visuals Toolset</a>
+      <a href="https://github.com/patrickdell/forensics-toolset" target="_blank" rel="noopener noreferrer">GitHub</a>
+      <a href="https://patrickdell.ca" target="_blank" rel="noopener noreferrer">patrickdell.ca</a>
     </div>
   </div>
 </nav>
@@ -133,7 +133,7 @@
         <p>Extracts EXIF, IPTC, and XMP metadata embedded in the image file and checks for forensic indicators: editing software, AI generation tools, timestamp anomalies, and GPS coordinates.</p>
         <p><strong>What to look for:</strong> Editing software names (Photoshop, GIMP, Lightroom); AI generation tool signatures (Midjourney, DALL-E, Stable Diffusion, ComfyUI); GPS at exactly 0°0′ ("Null Island" — likely stripped or fabricated); DateTime inconsistencies across fields; missing device info on images claiming to be phone photos.</p>
         <p><strong>False positives and limitations:</strong> Social media platforms strip nearly all metadata on upload — absence of metadata is normal, not suspicious. Editing software tags indicate post-processing only, not manipulation. Device clocks may be set incorrectly, so timestamp anomalies can be innocent. Metadata can be added, removed, or modified without changing any pixel — its presence or absence does not prove or disprove authenticity.</p>
-        <p><strong>Further reading:</strong> <a href="https://bellingcat.gitbook.io/toolkit" target="_blank" rel="noopener">Bellingcat's Online Investigation Toolkit</a> <em>(third-party — some tools require upload or account)</em> · <a href="https://exif.regex.info/exif.cgi" target="_blank" rel="noopener">Jeffrey's Exif Viewer</a> · <a href="https://firstdraftnews.org/" target="_blank" rel="noopener">First Draft verification resources</a></p>
+        <p><strong>Further reading:</strong> <a href="https://bellingcat.gitbook.io/toolkit" target="_blank" rel="noopener noreferrer">Bellingcat's Online Investigation Toolkit</a> <em>(third-party — some tools require upload or account)</em> · <a href="https://exif.regex.info/exif.cgi" target="_blank" rel="noopener noreferrer">Jeffrey's Exif Viewer</a> · <a href="https://firstdraftnews.org/" target="_blank" rel="noopener noreferrer">First Draft verification resources</a></p>
       </div>
     </div>
 
@@ -167,7 +167,7 @@
         <p>ELA re-saves the image as JPEG and measures per-pixel differences between the original and the re-saved version. Every JPEG save degrades quality uniformly — regions that were edited or composited from a different source have a different error baseline and appear as brighter patches in the heatmap.</p>
         <p><strong>What to look for:</strong> Brighter or more saturated patches on smooth surfaces (faces, walls, clear sky); uneven brightness across a large uniform area; sharp-edged bright rectangles marking a paste boundary; JPEG ghosting — faint double-edges around pasted objects.</p>
         <p><strong>False positives and limitations:</strong> Text, sharp edges, fabric, foliage, and cartoon art produce high ELA naturally. Images saved multiple times at the same quality "even out" and show falsely low ELA. Screenshots and social-media re-encodes produce uniform high noise across the whole image, making them nearly unreadable. Never use ELA as the sole basis for a conclusion.</p>
-        <p><strong>Further reading:</strong> <a href="https://fotoforensics.com/tutorial-ela.php" target="_blank" rel="noopener">FotoForensics ELA tutorial</a> · <a href="https://29a.ch/photo-forensics/" target="_blank" rel="noopener">29a.ch Forensically</a> <em>(third-party)</em> · <a href="https://bellingcat.gitbook.io/toolkit/more/all-tools/forensically" target="_blank" rel="noopener">Bellingcat: Forensically guide</a> <em>(third-party — Bellingcat caution: never rely on ELA alone)</em></p>
+        <p><strong>Further reading:</strong> <a href="https://fotoforensics.com/tutorial-ela.php" target="_blank" rel="noopener noreferrer">FotoForensics ELA tutorial</a> · <a href="https://29a.ch/photo-forensics/" target="_blank" rel="noopener noreferrer">29a.ch Forensically</a> <em>(third-party)</em> · <a href="https://bellingcat.gitbook.io/toolkit/more/all-tools/forensically" target="_blank" rel="noopener noreferrer">Bellingcat: Forensically guide</a> <em>(third-party — Bellingcat caution: never rely on ELA alone)</em></p>
       </div>
     </div>
 
@@ -223,7 +223,7 @@
         <p>Identifies copy-move forgery by finding visually similar regions at different positions. The image is divided into overlapping 16×16 pixel blocks; feature vectors are built and sorted, then nearest-neighbour pairs are flagged as potential clones and highlighted with colour-coded overlays.</p>
         <p><strong>What to look for:</strong> Matching colour-coded boxes far apart in the image — same colour means the same matched pair. Long connecting lines between distant regions are the most suspicious. Watch for repeated textures repositioned to fill gaps: sky patched in, crowd backgrounds duplicated, objects removed by cloning a nearby region over them.</p>
         <p><strong>False positives and limitations:</strong> Sky, walls, solid-colour fills, and smooth gradients are legitimately similar and generate noise — especially at Medium/High sensitivity. Does not detect AI inpainting, diffusion-based content-aware fill, or frequency-domain edits. Start with Low sensitivity and increase only if specific suspicious regions warrant closer inspection.</p>
-        <p><strong>Further reading:</strong> <a href="https://29a.ch/photo-forensics/" target="_blank" rel="noopener">29a.ch Forensically</a> <em>(third-party)</em> · <a href="https://bellingcat.gitbook.io/toolkit/more/all-tools/forensically" target="_blank" rel="noopener">Bellingcat: Forensically guide</a> <em>(third-party)</em></p>
+        <p><strong>Further reading:</strong> <a href="https://29a.ch/photo-forensics/" target="_blank" rel="noopener noreferrer">29a.ch Forensically</a> <em>(third-party)</em> · <a href="https://bellingcat.gitbook.io/toolkit/more/all-tools/forensically" target="_blank" rel="noopener noreferrer">Bellingcat: Forensically guide</a> <em>(third-party)</em></p>
       </div>
     </div>
 
@@ -316,7 +316,9 @@
         <input type="range" id="strip-quality-slider" min="70" max="100" value="92" />
       </div>
 
-      <div id="strip-before-after" class="strip-summary" style="display:none"></div>
+      <div id="strip-before-after" class="strip-summary" style="display:none">
+        <span id="strip-before-count">—</span> fields before &rarr; <span id="strip-after-count">—</span> after strip
+      </div>
 
       <button class="export-btn" id="strip-export-btn" style="margin-top:1rem">
         Strip &amp; Download
@@ -385,7 +387,7 @@
         <p><strong>How to use:</strong> Load an image, then click and drag on the canvas to draw arrows tracing shadow edges or light ray directions. Each vector's angle (0–360°) and pixel length are logged in the list below the canvas. Use ↶ Undo to remove the last vector, or Clear all to start over.</p>
         <p><strong>What to look for:</strong> Vectors pointing in significantly different directions indicate different light sources — a strong indicator of compositing. Vectors that nearly agree but differ by 10–15° may indicate elements photographed at different times of day. Mismatched shadow lengths relative to object heights suggest elements from different times or locations.</p>
         <p><strong>False positives and limitations:</strong> Multiple artificial light sources (studio lights, streetlights, windows) legitimately produce multiple shadow directions. Curved or tilted surfaces create shadows that don't follow a simple directional model. Perspective distortion can make parallel shadows appear to converge. Accuracy depends entirely on correctly identifying and tracing shadow edges.</p>
-        <p><strong>Further reading:</strong> <a href="https://www.suncalc.org/" target="_blank" rel="noopener">SunCalc.org</a> — verify sun angle for a given location and time · <a href="https://bellingcat.gitbook.io/toolkit" target="_blank" rel="noopener">Bellingcat's Online Investigation Toolkit</a> <em>(third-party — some tools require upload or account)</em></p>
+        <p><strong>Further reading:</strong> <a href="https://www.suncalc.org/" target="_blank" rel="noopener noreferrer">SunCalc.org</a> — verify sun angle for a given location and time · <a href="https://bellingcat.gitbook.io/toolkit" target="_blank" rel="noopener noreferrer">Bellingcat's Online Investigation Toolkit</a> <em>(third-party — some tools require upload or account)</em></p>
       </div>
     </div>
 
@@ -446,12 +448,12 @@
       <a class="tool-link" data-permalink="watermark">Link to this tool</a>
       <div id="watermark-explain" class="tool-explain" style="display:none">
         <p>Checks for three classes of provenance signal that can be verified entirely in your browser — no data is uploaded anywhere.</p>
-        <p><strong>C2PA / Content Credentials:</strong> The <a href="https://c2pa.org/" target="_blank" rel="noopener">Coalition for Content Provenance and Authenticity</a> open standard embeds a cryptographically signed manifest into image files. It records which tools touched the image and whether AI was involved. Adobe Photoshop, Lightroom, Firefly, Nikon Z-series cameras, Sony α-series, and Microsoft tools all embed C2PA. Detection here confirms presence only — cryptographic verification of the signature chain requires an external validator.</p>
-        <p><strong>IPTC Digital Source Type:</strong> The <a href="https://iptc.org/std/photometadata/documentation/userguide/" target="_blank" rel="noopener">IPTC Photo Metadata Standard</a> includes a <code>DigitalSourceType</code> field that declares whether an image is an original photo, AI-generated, or a synthetic composite. Adobe tools write this field automatically for AI-generated content. Like all metadata, it can be edited or removed.</p>
+        <p><strong>C2PA / Content Credentials:</strong> The <a href="https://c2pa.org/" target="_blank" rel="noopener noreferrer">Coalition for Content Provenance and Authenticity</a> open standard embeds a cryptographically signed manifest into image files. It records which tools touched the image and whether AI was involved. Adobe Photoshop, Lightroom, Firefly, Nikon Z-series cameras, Sony α-series, and Microsoft tools all embed C2PA. Detection here confirms presence only — cryptographic verification of the signature chain requires an external validator.</p>
+        <p><strong>IPTC Digital Source Type:</strong> The <a href="https://iptc.org/std/photometadata/documentation/userguide/" target="_blank" rel="noopener noreferrer">IPTC Photo Metadata Standard</a> includes a <code>DigitalSourceType</code> field that declares whether an image is an original photo, AI-generated, or a synthetic composite. Adobe tools write this field automatically for AI-generated content. Like all metadata, it can be edited or removed.</p>
         <p><strong>AI generator fingerprints:</strong> Known AI tool names and signatures in EXIF/XMP software, creator, and history fields.</p>
         <p><strong>False positives and limitations:</strong> All three checks rely on declared or embedded metadata that can be stripped, fabricated, or simply absent. A clean result does not confirm authenticity. Authentic news photographs rarely carry C2PA. Most AI-generated images in circulation have had metadata stripped before distribution.</p>
         <p><strong>What cannot be checked locally:</strong> SynthID (Google DeepMind) and other invisible pixel-level watermarks require their proprietary detector models — they cannot be verified in a browser. See the <strong>SynthID ↗</strong> tab for more information and links to Google's resources. Their absence tells you nothing.</p>
-        <p><strong>Further reading:</strong> <a href="https://contentauthenticity.org/" target="_blank" rel="noopener">Content Authenticity Initiative</a> · <a href="https://iptc.org/standards/photo-metadata/" target="_blank" rel="noopener">IPTC Photo Metadata Standard</a> · <a href="https://bellingcat.gitbook.io/toolkit" target="_blank" rel="noopener">Bellingcat toolkit</a> <em>(third-party — some tools require upload)</em></p>
+        <p><strong>Further reading:</strong> <a href="https://contentauthenticity.org/" target="_blank" rel="noopener noreferrer">Content Authenticity Initiative</a> · <a href="https://iptc.org/standards/photo-metadata/" target="_blank" rel="noopener noreferrer">IPTC Photo Metadata Standard</a> · <a href="https://bellingcat.gitbook.io/toolkit" target="_blank" rel="noopener noreferrer">Bellingcat toolkit</a> <em>(third-party — some tools require upload)</em></p>
       </div>
     </div>
 
@@ -484,10 +486,10 @@
     </p>
 
     <div style="display:flex; flex-wrap:wrap; gap:0.75rem; margin-top:0.25rem">
-      <a href="https://deepmind.google/technologies/synthid/" target="_blank" rel="noopener" class="suncalc-open-btn">
+      <a href="https://deepmind.google/technologies/synthid/" target="_blank" rel="noopener noreferrer" class="suncalc-open-btn">
         About SynthID ↗
       </a>
-      <a href="https://ai.google.dev/responsible/docs/safeguards/synthid" target="_blank" rel="noopener" class="suncalc-open-btn" style="background:var(--card2); color:var(--ink); border:1px solid var(--line)">
+      <a href="https://ai.google.dev/responsible/docs/safeguards/synthid" target="_blank" rel="noopener noreferrer" class="suncalc-open-btn" style="background:var(--card2); color:var(--ink); border:1px solid var(--line)">
         Developer docs ↗
       </a>
     </div>
@@ -511,7 +513,7 @@
       Visual Crossing is a third-party service. No image data is sent — you enter a location and date only. A free account provides limited queries; a paid plan is required for bulk historical access.
     </p>
 
-    <a href="https://www.visualcrossing.com/weather-history/" target="_blank" rel="noopener" class="suncalc-open-btn">
+    <a href="https://www.visualcrossing.com/weather-history/" target="_blank" rel="noopener noreferrer" class="suncalc-open-btn">
       Open Weather History ↗
     </a>
   </section>
@@ -530,9 +532,9 @@
     <p class="suncalc-intro" style="margin-top:0.5rem">
       You can also use SunCalc in reverse: enter candidate locations and check which one produces a sun angle that matches the shadow directions and lengths you measured in the image.
     </p>
-    <p class="suncalc-caveat">SunCalc is a third-party tool by <a href="https://mourner.github.io/" target="_blank" rel="noopener">Vladimir Agafonkin</a>. No image data is sent — you only enter a location and date. The tool runs in your browser.</p>
+    <p class="suncalc-caveat">SunCalc is a third-party tool by <a href="https://mourner.github.io/" target="_blank" rel="noopener noreferrer">Vladimir Agafonkin</a>. No image data is sent — you only enter a location and date. The tool runs in your browser.</p>
 
-    <a href="https://www.suncalc.org/" target="_blank" rel="noopener" class="suncalc-open-btn">
+    <a href="https://www.suncalc.org/" target="_blank" rel="noopener noreferrer" class="suncalc-open-btn">
       Open SunCalc ↗
     </a>
   </section>
@@ -543,11 +545,11 @@
 <footer class="site-footer">
   <span class="footer-privacy">All processing happens in your browser — nothing is uploaded</span>
   <div class="footer-links">
-    <a href="https://visuals-toolset.pages.dev" target="_blank" rel="noopener">Visuals Toolset</a>
+    <a href="https://visuals-toolset.pages.dev" target="_blank" rel="noopener noreferrer">Visuals Toolset</a>
     <span class="footer-sep">·</span>
-    <a href="https://github.com/patrickdell/forensics-toolset" target="_blank" rel="noopener">GitHub</a>
+    <a href="https://github.com/patrickdell/forensics-toolset" target="_blank" rel="noopener noreferrer">GitHub</a>
     <span class="footer-sep">·</span>
-    <a href="https://patrickdell.ca" target="_blank" rel="noopener">patrickdell.ca</a>
+    <a href="https://patrickdell.ca" target="_blank" rel="noopener noreferrer">patrickdell.ca</a>
   </div>
 </footer>
 
@@ -567,9 +569,9 @@
 
       <h3>Links</h3>
       <div class="about-links">
-        <a href="https://visuals-toolset.pages.dev" target="_blank" rel="noopener">Visuals Toolset</a>
-        <a href="https://github.com/patrickdell/forensics-toolset" target="_blank" rel="noopener">Source code on GitHub</a>
-        <a href="https://patrickdell.ca" target="_blank" rel="noopener">patrickdell.ca</a>
+        <a href="https://visuals-toolset.pages.dev" target="_blank" rel="noopener noreferrer">Visuals Toolset</a>
+        <a href="https://github.com/patrickdell/forensics-toolset" target="_blank" rel="noopener noreferrer">Source code on GitHub</a>
+        <a href="https://patrickdell.ca" target="_blank" rel="noopener noreferrer">patrickdell.ca</a>
       </div>
     </div>
   </div>

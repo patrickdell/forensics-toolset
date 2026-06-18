@@ -61,6 +61,11 @@ async function analyzeMetadata() {
     // Run flag checks
     const flags = runFlagChecks(flatExif, img);
 
+    // Revoke previous thumbnail blob URL before replacing (prevents blob URL accumulation)
+    if (results.meta && results.meta.thumbnail) {
+      URL.revokeObjectURL(results.meta.thumbnail);
+    }
+
     // Store results
     results.meta = { fields, flags, hash: hashHex, thumbnail: extractThumbnail(exifData) };
 

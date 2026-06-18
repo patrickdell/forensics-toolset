@@ -1,0 +1,26 @@
+/*
+  # Prevent clickjacking (belt-and-suspenders with frame-ancestors in CSP)
+  X-Frame-Options: DENY
+
+  # Prevent MIME-type sniffing (e.g. treating a JPEG as executable)
+  X-Content-Type-Options: nosniff
+
+  # Send only the origin (no path, no hash) as Referer when following external links.
+  # External link elements also carry rel="noreferrer" as defence-in-depth.
+  Referrer-Policy: strict-origin-when-cross-origin
+
+  # Disable hardware APIs not needed by this tool
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()
+
+  # Content Security Policy
+  # script-src: our own modules + jsDelivr CDN (both scripts carry SRI hashes)
+  # style-src:  our own stylesheet + 'unsafe-inline' required for the @font-face
+  #             <style> block and JS-set element.style assignments
+  # font-src:   Globe & Mail CDN for Pratt / GM Sans / GM Sans Label
+  # img-src:    same-origin assets, blob: URLs (canvas output, thumbnails),
+  #             data: URLs (piexif reinject intermediate, canvas toDataURL)
+  # worker-src: clone.worker.js served from the same origin
+  # connect-src: 'none' — no XHR / fetch calls anywhere in the app
+  # object-src / base-uri / form-action: locked down
+  # frame-ancestors: replaces X-Frame-Options for modern browsers
+  Content-Security-Policy: default-src 'none'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; font-src https://www.theglobeandmail.com; img-src 'self' blob: data:; worker-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'
