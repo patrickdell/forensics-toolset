@@ -172,16 +172,38 @@ function updateVectorList() {
     item.className = 'shadow-vector-item';
     if (selectedVector === idx) item.classList.add('selected');
 
-    const angle = v.angle < 0 ? v.angle + 360 : v.angle;
-    item.innerHTML = `
-      <div class="shadow-vector-info">
-        <span class="shadow-vector-swatch" style="background:${v.colour}"></span>
-        <span class="shadow-vector-label">Vector ${idx + 1}</span>
-        <span class="shadow-vector-angle">${angle.toFixed(1)}°</span>
-        <span class="shadow-vector-distance">${Math.round(v.distance)}px</span>
-      </div>
-      <button class="shadow-vector-delete" data-index="${idx}">Delete</button>
-    `;
+    const info = document.createElement('div');
+    info.className = 'shadow-vector-info';
+
+    const swatch = document.createElement('span');
+    swatch.className = 'shadow-vector-swatch';
+    swatch.style.backgroundColor = v.colour;  // DOM property — no innerHTML injection risk
+
+    const label = document.createElement('span');
+    label.className = 'shadow-vector-label';
+    label.textContent = `Vector ${idx + 1}`;
+
+    const displayAngle = v.angle < 0 ? v.angle + 360 : v.angle;
+    const angleSpan = document.createElement('span');
+    angleSpan.className = 'shadow-vector-angle';
+    angleSpan.textContent = `${displayAngle.toFixed(1)}°`;
+
+    const distSpan = document.createElement('span');
+    distSpan.className = 'shadow-vector-distance';
+    distSpan.textContent = `${Math.round(v.distance)}px`;
+
+    info.appendChild(swatch);
+    info.appendChild(label);
+    info.appendChild(angleSpan);
+    info.appendChild(distSpan);
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'shadow-vector-delete';
+    deleteBtn.dataset.index = String(idx);
+    deleteBtn.textContent = 'Delete';
+
+    item.appendChild(info);
+    item.appendChild(deleteBtn);
 
     item.addEventListener('click', () => {
       selectedVector = selectedVector === idx ? null : idx;
@@ -189,7 +211,7 @@ function updateVectorList() {
       redrawShadowCanvas();
     });
 
-    item.querySelector('.shadow-vector-delete').addEventListener('click', e => {
+    deleteBtn.addEventListener('click', e => {
       e.stopPropagation();
       vectors.splice(idx, 1);
       selectedVector = null;

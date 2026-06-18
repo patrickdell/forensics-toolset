@@ -158,18 +158,34 @@ async function runRedactorAnalysis() {
   detailsList.innerHTML = '';
 
   if (regions.length === 0) {
-    detailsList.innerHTML = '<div style="padding: 8px; color: var(--muted); font-size: 12px;">No suspicious regions detected.</div>';
+    const none = document.createElement('div');
+    none.style.cssText = 'padding:8px;color:var(--muted);font-size:12px;';
+    none.textContent   = 'No candidate regions detected.';
+    detailsList.appendChild(none);
   } else {
     regions.slice(0, 10).forEach((region, idx) => {
-      const item = document.createElement('div');
+      const item  = document.createElement('div');
       item.className = 'redactor-region-item';
-      item.innerHTML = `
-        <div class="redactor-region-info">
-          <span class="redactor-region-label">Region ${idx + 1}</span>
-          <span class="redactor-region-size">${Math.round(region.width)} × ${Math.round(region.height)}px</span>
-          <span class="redactor-region-confidence">${Math.round(region.avgScore * 100)}% confidence</span>
-        </div>
-      `;
+
+      const info  = document.createElement('div');
+      info.className = 'redactor-region-info';
+
+      const label = document.createElement('span');
+      label.className = 'redactor-region-label';
+      label.textContent = `Region ${idx + 1}`;
+
+      const size  = document.createElement('span');
+      size.className = 'redactor-region-size';
+      size.textContent = `${Math.round(region.width)} × ${Math.round(region.height)}px`;
+
+      const score = document.createElement('span');
+      score.className = 'redactor-region-score';
+      score.textContent = `${Math.round(region.avgScore * 100)}% score`;
+
+      info.appendChild(label);
+      info.appendChild(size);
+      info.appendChild(score);
+      item.appendChild(info);
       detailsList.appendChild(item);
     });
   }
@@ -256,23 +272,22 @@ function analyzeSwirl(blockData) {
 function clusterBlocks(blocks, width, height) {
   if (blocks.length === 0) return [];
 
-  // Simple clustering: group nearby blocks
   const clusters = [];
-  const used = new Set();
+  const used = new Set();  // set of block object references — O(1) lookup
 
   for (const block of blocks) {
-    if (used.has(blocks.indexOf(block))) continue;
+    if (used.has(block)) continue;
 
     const cluster = [block];
-    used.add(blocks.indexOf(block));
+    used.add(block);
 
     for (const other of blocks) {
-      if (used.has(blocks.indexOf(other))) continue;
+      if (used.has(other)) continue;
 
       const dist = Math.hypot(block.x - other.x, block.y - other.y);
-      if (dist < 32) { // Clustering threshold
+      if (dist < 32) {
         cluster.push(other);
-        used.add(blocks.indexOf(other));
+        used.add(other);
       }
     }
 

@@ -143,6 +143,27 @@ function renderELACanvas() {
     ctx.globalAlpha = 1;
   }
 
+  // Non-JPEG: desaturate result and stamp a persistent warning banner so
+  // the unreliable output is visually unmistakable, not just a text note.
+  if (!img.isJpeg) {
+    const desat = ctx.getImageData(0, 0, w, h);
+    const d = desat.data;
+    for (let i = 0; i < d.length; i += 4) {
+      const grey = Math.round(d[i] * 0.299 + d[i + 1] * 0.587 + d[i + 2] * 0.114);
+      d[i] = d[i + 1] = d[i + 2] = grey;
+    }
+    ctx.putImageData(desat, 0, 0);
+
+    const bannerH  = Math.max(36, Math.round(h * 0.05));
+    const fontSize = Math.max(13, Math.round(bannerH * 0.48));
+    ctx.fillStyle = 'rgba(245,166,35,0.93)';
+    ctx.fillRect(0, 0, w, bannerH);
+    ctx.fillStyle = '#1a1a1a';
+    ctx.font = `bold ${fontSize}px sans-serif`;
+    ctx.textBaseline = 'middle';
+    ctx.fillText('ELA — JPEG ONLY: results for non-JPEG images are not meaningful', 10, bannerH / 2);
+  }
+
   wrap.style.display  = 'block';
   results.ela.canvas  = canvas.toDataURL();
 }

@@ -111,7 +111,7 @@ async function runCloneDetection(scaleDown) {
         progressWrap.style.display = 'none';
         analyseBtn.disabled = false;
         cloneWorker = null;
-        alert('Clone detection error: ' + e.data.error);
+        showCloneError('Clone detection error: ' + e.data.error);
       }
     };
 
@@ -119,8 +119,20 @@ async function runCloneDetection(scaleDown) {
     progressWrap.style.display = 'none';
     analyseBtn.disabled = false;
     if (cloneWorker) { cloneWorker.terminate(); cloneWorker = null; }
-    alert('Clone detection error: ' + err);
+    showCloneError('Clone detection error: ' + err.message);
   }
+}
+
+function showCloneError(msg) {
+  let errEl = document.getElementById('clone-error');
+  if (!errEl) {
+    errEl = document.createElement('div');
+    errEl.id        = 'clone-error';
+    errEl.className = 'fts-warn';
+    errEl.style.cssText = 'margin:0.75rem 0;padding:0.5rem 0.75rem;font-size:0.875rem;';
+    document.getElementById('clone-controls').appendChild(errEl);
+  }
+  errEl.textContent = msg;
 }
 
 function renderCloneResults(matches, width, height) {

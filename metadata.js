@@ -67,12 +67,18 @@ async function analyzeMetadata() {
     // Render flags
     flagsList.innerHTML = '';
     if (flags.length === 0) {
-      flagsList.innerHTML = '<p style="color:var(--muted)">No forensic flags.</p>';
+      const none = document.createElement('p');
+      none.style.color = 'var(--muted)';
+      none.textContent = 'No forensic flags.';
+      flagsList.appendChild(none);
     } else {
       flags.forEach(flag => {
         const badge = document.createElement('div');
         badge.className = `flag-badge ${flag.level}`;
-        badge.innerHTML = `<strong>${flag.level === 'red' ? '⚠️' : flag.level === 'yellow' ? '⚡' : '✓'}</strong> ${flag.message}`;
+        const icon = document.createElement('strong');
+        icon.textContent = flag.level === 'red' ? '⚠️' : flag.level === 'yellow' ? '⚡' : '✓';
+        badge.appendChild(icon);
+        badge.appendChild(document.createTextNode(' ' + flag.message));
         flagsList.appendChild(badge);
       });
     }

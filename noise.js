@@ -110,49 +110,52 @@ async function runNoiseAnalysis() {
       setProgress(progressBar, progressText, pct, `Analysing… ${pct}%`);
     }
 
-    // Create heatmap canvas
-    canvas.width = width;
+    // Draw original onto main canvas first
+    canvas.width  = width;
     canvas.height = height;
     const ctx = canvas.getContext('2d');
-
-    // Draw original image first
     ctx.drawImage(img.bitmap, 0, 0);
 
-    // Overlay residual heatmap
-    const heatmapData = ctx.getImageData(0, 0, width, height);
-    const hdata = heatmapData.data;
+    // Build heatmap on a separate offscreen canvas so compositing works correctly.
+    // putImageData ignores globalAlpha and replaces pixels entirely, so we must
+    // drawImage the offscreen canvas onto the main one to get proper alpha blending.
+    const heatCanvas = document.createElement('canvas');
+    heatCanvas.width  = width;
+    heatCanvas.height = height;
+    const heatCtx    = heatCanvas.getContext('2d');
+    const heatmapData = heatCtx.createImageData(width, height);
+    const hdata       = heatmapData.data;
 
     for (let i = 0; i < residuals.length; i++) {
-      const residual = residuals[i];
+      const residual  = residuals[i];
       const amplified = Math.min(255, residual * noiseAmplification);
 
       // False-colour LUT: blue (low) → green → yellow → red (high)
       let r, g, b;
       if (amplified < 85) {
-        // Blue to green
         r = 0;
         g = Math.round((amplified / 85) * 255);
         b = Math.round((1 - amplified / 85) * 255);
       } else if (amplified < 170) {
-        // Green to yellow
         r = Math.round(((amplified - 85) / 85) * 255);
         g = 255;
         b = 0;
       } else {
-        // Yellow to red
         r = 255;
         g = Math.round((1 - (amplified - 170) / 85) * 255);
         b = 0;
       }
 
-      const idx = i * 4;
-      hdata[idx] = r;
+      const idx     = i * 4;
+      hdata[idx]     = r;
       hdata[idx + 1] = g;
       hdata[idx + 2] = b;
-      hdata[idx + 3] = Math.round(amplified / 2); // Semi-transparent overlay
+      hdata[idx + 3] = Math.round(amplified / 2);  // semi-transparent overlay
     }
 
-    ctx.putImageData(heatmapData, 0, 0);
+    heatCtx.putImageData(heatmapData, 0, 0);
+    // Composite heatmap over original using alpha blending via drawImage
+    ctx.drawImage(heatCanvas, 0, 0);
 
     // Store result
     let maxResidual = 0;
@@ -174,6 +177,10 @@ async function runNoiseAnalysis() {
   } catch (err) {
     console.error('Noise analysis error:', err);
     progressWrap.style.display = 'none';
-    alert('Error analyzing noise: ' + err.message);
+    const errEl = document.createElement('div');
+    errEl.className = 'fts-warn';
+    errEl.style.cssText = 'margin:0.75rem 0;padding:0.5rem 0.75rem;font-size:0.875rem;';
+    errEl.textContent = 'Error analysing noise: ' + err.message;
+    document.getElementById('noise-controls').appendChild(errEl);
   }
 }

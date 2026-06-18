@@ -38,10 +38,14 @@ async function setupPivot() {
 }
 
 async function searchGoogle() {
+  if (!confirm(
+    'Google Lens will receive your image file.\n\n' +
+    'Your image will be uploaded to Google\'s servers. Continue?'
+  )) return;
+
   const blob = await getImageBlob();
   if (!blob) return;
 
-  // Google Lens accepts image upload via blob in a form
   const form = document.createElement('form');
   form.method = 'POST';
   form.action = 'https://www.google.com/searchbyimage/upload';
@@ -53,7 +57,6 @@ async function searchGoogle() {
   fileInput.type = 'file';
   fileInput.name = 'encoded_image';
 
-  // Create a FileList-like object with the blob
   const dataTransfer = new DataTransfer();
   dataTransfer.items.add(new File([blob], img.name, { type: blob.type }));
   fileInput.files = dataTransfer.files;
@@ -74,37 +77,35 @@ async function searchTinEye() {
 }
 
 async function searchYandex() {
+  if (!confirm(
+    'Yandex Images will receive your image data.\n\n' +
+    'Your image will be sent to Yandex\'s servers. Continue?'
+  )) return;
+
   const dataUrl = await getImageDataUrl();
   if (!dataUrl) return;
 
-  // Yandex accepts image URL as query param
-  // Note: Data URLs may be too long; user may need to upload manually if this fails
   try {
     const encodedUrl = encodeURIComponent(dataUrl);
-    window.open(
-      `https://yandex.com/images/search?rpt=imageview&url=${encodedUrl}`,
-      '_blank'
-    );
+    window.open(`https://yandex.com/images/search?rpt=imageview&url=${encodedUrl}`, '_blank');
   } catch {
-    // Fallback: open Yandex main page for manual upload
     window.open('https://yandex.com/images', '_blank');
   }
 }
 
 async function searchBaidu() {
+  if (!confirm(
+    'Baidu Image Search will receive your image data.\n\n' +
+    'Your image will be sent to Baidu\'s servers. Continue?'
+  )) return;
+
   const dataUrl = await getImageDataUrl();
   if (!dataUrl) return;
 
-  // Baidu image search
-  // Data URLs may be too long; this attempts to use them but may require manual upload
   try {
     const encodedUrl = encodeURIComponent(dataUrl);
-    window.open(
-      `https://image.baidu.com/search/index?tn=baiduimage&word=${encodedUrl}`,
-      '_blank'
-    );
+    window.open(`https://image.baidu.com/search/index?tn=baiduimage&word=${encodedUrl}`, '_blank');
   } catch {
-    // Fallback: open Baidu main page for manual upload
     window.open('https://image.baidu.com/', '_blank');
   }
 }

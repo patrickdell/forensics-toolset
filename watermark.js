@@ -97,7 +97,9 @@ async function runWatermarkChecks() {
   } else {
     container.appendChild(card('neutral', 'C2PA / Content Credentials', 'No Content Credentials found',
       'No C2PA manifest was detected in this file. This is expected for the vast majority of images — ' +
-      'most cameras and editing tools do not yet embed Content Credentials. Absence is not evidence of manipulation.'
+      'most cameras and editing tools do not yet embed Content Credentials. ' +
+      '<strong>Absence does not confirm that no credentials exist</strong> — very large files may store ' +
+      'manifests beyond the scan window. Absence is not evidence of manipulation.'
     ));
   }
 
@@ -155,22 +157,33 @@ async function runWatermarkChecks() {
 // ── Detection functions ────────────────────────────────────────────────────────
 
 /**
- * Scan first 256 KB for ASCII 'c2pa' — the string appears in JUMBF labels and
- * manifest JSON for both JPEG (APP11) and PNG (iTXt/caBX chunk) C2PA containers.
+ * Scan file bytes for ASCII 'c2pa' — appears in JUMBF labels and manifest JSON
+ * for both JPEG (APP11) and PNG (iTXt/caBX chunk) C2PA containers.
+ * Files under 5 MB are scanned in full; larger files get first+last 512 KB.
  */
 function detectC2PABytes(arrayBuffer, mimeType) {
-  const bytes = new Uint8Array(arrayBuffer);
-  const limit = Math.min(262144, bytes.length - 4);
-  for (let i = 0; i < limit; i++) {
-    if (bytes[i]   === 0x63 &&   // 'c'
-        bytes[i+1] === 0x32 &&   // '2'
-        bytes[i+2] === 0x70 &&   // 'p'
-        bytes[i+3] === 0x61) {   // 'a'
-      const fmt = mimeType === 'image/jpeg' ? 'JPEG (APP11 / JUMBF)'
-                : mimeType === 'image/png'  ? 'PNG'
-                : mimeType === 'image/webp' ? 'WebP'
-                : 'file';
-      return { present: true, format: fmt };
+  const bytes    = new Uint8Array(arrayBuffer);
+  const fileSize = bytes.length;
+  const SMALL    = 5 * 1024 * 1024;   // 5 MB threshold
+  const WINDOW   = 524288;             // 512 KB scan window for large files
+
+  const zones = fileSize <= SMALL
+    ? [[0, fileSize - 4]]
+    : [[0, Math.min(WINDOW, fileSize - 4)],
+       [Math.max(WINDOW, fileSize - WINDOW), fileSize - 4]];
+
+  for (const [start, end] of zones) {
+    for (let i = start; i < end; i++) {
+      if (bytes[i]   === 0x63 &&   // 'c'
+          bytes[i+1] === 0x32 &&   // '2'
+          bytes[i+2] === 0x70 &&   // 'p'
+          bytes[i+3] === 0x61) {   // 'a'
+        const fmt = mimeType === 'image/jpeg' ? 'JPEG (APP11 / JUMBF)'
+                  : mimeType === 'image/png'  ? 'PNG'
+                  : mimeType === 'image/webp' ? 'WebP'
+                  : 'file';
+        return { present: true, format: fmt };
+      }
     }
   }
   return { present: false, format: null };
