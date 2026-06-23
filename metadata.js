@@ -3,7 +3,7 @@
  */
 
 import { img, results, getExifData } from './app.js';
-import { sha256, formatBytes, escapeHtml } from './utils.js';
+import { sha256, formatBytes, escapeHtml, flattenExif } from './utils.js';
 
 export function initMetadata() {
   // Wire "show all fields" toggle once
@@ -20,6 +20,7 @@ const FORENSIC_FIELDS = {
   'Timestamps': ['DateTimeOriginal', 'DateTime', 'DateTimeDigitized', 'CreateDate', 'ModifyDate'],
   'Location': ['GPSLatitude', 'GPSLongitude', 'GPSAltitude', 'GPSTimeStamp', 'GPSDateStamp'],
   'Device': ['Make', 'Model', 'Software', 'LensModel', 'SerialNumber'],
+  'Camera Settings': ['Orientation', 'ColorSpace', 'ISOSpeedRatings', 'ExposureTime', 'FNumber', 'FocalLength', 'OffsetTimeOriginal'],
   'Edit History': ['ProcessingSoftware', 'HistoryAction', 'HistorySoftwareAgent'],
   'Copyright': ['Artist', 'Copyright', 'ByLine', 'CopyrightNotice', 'Source'],
 };
@@ -59,15 +60,16 @@ async function analyzeMetadata() {
     const fields = collectForensicFields(flatExif);
 
     // Run flag checks
-    const flags = runFlagChecks(flatExif, img);
+    const flags = runFlagChecks(flatExif, exifData, img);
 
-    // Revoke previous thumbnail blob URL before replacing (prevents blob URL accumulation)
-    if (results.meta && results.meta.thumbnail) {
-      URL.revokeObjectURL(results.meta.thumbnail);
-    }
+    // ExifReader's Thumbnail group already provides ready-to-use base64 — no manual
+    // byte-offset slicing needed, and nothing to revoke (it's a data URI, not a blob URL).
+    const thumbnail = exifData.Thumbnail?.base64
+      ? `data:image/jpeg;base64,${exifData.Thumbnail.base64}`
+      : null;
 
     // Store results
-    results.meta = { fields, flags, hash: hashHex, thumbnail: extractThumbnail(exifData) };
+    results.meta = { fields, flags, hash: hashHex, thumbnail };
 
     // Render flags
     flagsList.innerHTML = '';
@@ -140,77 +142,77 @@ async function analyzeMetadata() {
   }
 }
 
-function flattenExif(exifData) {
-  const flat = {};
-
-  function walk(obj, prefix = '') {
-    Object.entries(obj || {}).forEach(([key, val]) => {
-      const fullKey = prefix ? `${prefix}.${key}` : key;
-      if (val && typeof val === 'object' && !Array.isArray(val) && !(val instanceof Blob)) {
-        walk(val, fullKey);
-      } else if (val !== null && val !== undefined) {
-        flat[fullKey] = val;
-      }
-    });
-  }
-
-  walk(exifData);
-  return flat;
-}
-
 function collectForensicFields(flatExif) {
   const fields = {};
 
-  // File info
+  // File info — dimensions come from the decoded bitmap, not EXIF (always accurate,
+  // and ExifReader's 'file' group key for this is inconsistently spelled across formats)
   fields['Name'] = img.name;
   fields['FileSize'] = formatBytes(img.file.size);
   fields['MIMEType'] = img.type;
-  fields['ImageWidth'] = flatExif['Image.ImageWidth'] || flatExif['IFD0.ImageWidth'] || '?';
-  fields['ImageHeight'] = flatExif['Image.ImageHeight'] || flatExif['IFD0.ImageHeight'] || '?';
+  fields['ImageWidth'] = img.bitmap?.width ?? '?';
+  fields['ImageHeight'] = img.bitmap?.height ?? '?';
 
-  // Timestamps
-  fields['DateTimeOriginal'] = flatExif['IFD0.DateTimeOriginal'] || flatExif['Exif.DateTimeOriginal'] || null;
-  fields['DateTime'] = flatExif['IFD0.DateTime'] || flatExif['Image.DateTime'] || null;
-  fields['DateTimeDigitized'] = flatExif['Exif.DateTimeDigitized'] || null;
-  fields['CreateDate'] = flatExif['XMP.CreateDate'] || null;
-  fields['ModifyDate'] = flatExif['XMP.ModifyDate'] || null;
+  // Timestamps — ExifReader expanded mode merges 0th-IFD + Exif-IFD tags into one 'exif' group
+  fields['DateTimeOriginal'] = flatExif['exif.DateTimeOriginal'] || null;
+  fields['DateTime'] = flatExif['exif.DateTime'] || null;
+  fields['DateTimeDigitized'] = flatExif['exif.DateTimeDigitized'] || null;
+  fields['CreateDate'] = flatExif['xmp.CreateDate'] || null;
+  fields['ModifyDate'] = flatExif['xmp.ModifyDate'] || null;
 
-  // Location
-  fields['GPSLatitude'] = flatExif['GPS.GPSLatitude'] || null;
-  fields['GPSLongitude'] = flatExif['GPS.GPSLongitude'] || null;
-  fields['GPSAltitude'] = flatExif['GPS.GPSAltitude'] || null;
-  fields['GPSTimeStamp'] = flatExif['GPS.GPSTimeStamp'] || null;
-  fields['GPSDateStamp'] = flatExif['GPS.GPSDateStamp'] || null;
+  // Location — raw GPS IFD tags merge into 'exif' too; only Latitude/Longitude/Altitude
+  // get a separate precomputed 'gps' group of plain decimal numbers (handled in runFlagChecks,
+  // which has access to raw exifData — here we just show the same precomputed pair if present)
+  fields['GPSLatitude'] = flatExif['gps.Latitude'] ?? null;
+  fields['GPSLongitude'] = flatExif['gps.Longitude'] ?? null;
+  fields['GPSAltitude'] = flatExif['gps.Altitude'] ?? null;
+  fields['GPSTimeStamp'] = flatExif['exif.GPSTimeStamp'] || null;
+  fields['GPSDateStamp'] = flatExif['exif.GPSDateStamp'] || null;
 
   // Device
-  fields['Make'] = flatExif['IFD0.Make'] || flatExif['Image.Make'] || null;
-  fields['Model'] = flatExif['IFD0.Model'] || flatExif['Image.Model'] || null;
-  fields['Software'] = flatExif['IFD0.Software'] || flatExif['Image.Software'] || null;
-  fields['LensModel'] = flatExif['Exif.LensModel'] || null;
-  fields['SerialNumber'] = flatExif['Exif.InternalSerialNumber'] || null;
+  fields['Make'] = flatExif['exif.Make'] || null;
+  fields['Model'] = flatExif['exif.Model'] || null;
+  fields['Software'] = flatExif['exif.Software'] || null;
+  fields['LensModel'] = flatExif['exif.LensModel'] || null;
+  fields['SerialNumber'] = flatExif['exif.BodySerialNumber'] || flatExif['exif.SerialNumber'] || null;
+
+  // Camera settings
+  fields['Orientation'] = flatExif['exif.Orientation'] || null;
+  fields['ColorSpace'] = flatExif['exif.ColorSpace'] || null;
+  fields['ISOSpeedRatings'] = flatExif['exif.ISOSpeedRatings'] || null;
+  fields['ExposureTime'] = flatExif['exif.ExposureTime'] || null;
+  fields['FNumber'] = flatExif['exif.FNumber'] || null;
+  fields['FocalLength'] = flatExif['exif.FocalLength'] || null;
+  fields['OffsetTimeOriginal'] = flatExif['exif.OffsetTimeOriginal'] || null;
 
   // Edit history
-  fields['ProcessingSoftware'] = flatExif['Exif.ProcessingSoftware'] || null;
-  fields['HistoryAction'] = flatExif['XMP.HistoryAction'] || null;
-  fields['HistorySoftwareAgent'] = flatExif['XMP.HistorySoftwareAgent'] || null;
+  fields['ProcessingSoftware'] = flatExif['exif.ProcessingSoftware'] || null;
+  fields['HistoryAction'] = flatExif['xmp.HistoryAction'] || null;
+  fields['HistorySoftwareAgent'] = flatExif['xmp.HistorySoftwareAgent'] || null;
 
-  // Copyright
-  fields['Artist'] = flatExif['IFD0.Artist'] || flatExif['Image.Artist'] || null;
-  fields['Copyright'] = flatExif['IFD0.Copyright'] || flatExif['Image.Copyright'] || null;
-  fields['ByLine'] = flatExif['IPTC.ByLine'] || null;
-  fields['CopyrightNotice'] = flatExif['IPTC.CopyrightNotice'] || null;
-  fields['Source'] = flatExif['IPTC.Source'] || null;
+  // Copyright — IPTC IIM tag names are 'By-line' (hyphenated) and 'Copyright Notice' (spaced)
+  fields['Artist'] = flatExif['exif.Artist'] || null;
+  fields['Copyright'] = flatExif['exif.Copyright'] || null;
+  fields['ByLine'] = flatExif['iptc.By-line'] || null;
+  fields['CopyrightNotice'] = flatExif['iptc.Copyright Notice'] || null;
+  fields['Source'] = flatExif['iptc.Source'] || null;
 
   return fields;
 }
 
-function runFlagChecks(flatExif, img) {
+/** Word-boundary, case-insensitive substring test (avoids "Canva" matching inside "Canon"). */
+function containsWord(haystack, word) {
+  const escaped = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp(`\\b${escaped}\\b`, 'i').test(haystack);
+}
+
+function runFlagChecks(flatExif, exifData, img) {
   const flags = [];
   const allText = Object.values(flatExif).join(' ');
 
   // Software flags
   AI_GENERATION_TOOLS.forEach(tool => {
-    if (allText.includes(tool)) {
+    if (containsWord(allText, tool)) {
       flags.push({
         level: 'red',
         message: `AI generation tool detected in metadata: ${tool}`
@@ -219,7 +221,7 @@ function runFlagChecks(flatExif, img) {
   });
 
   SOFTWARE_EDIT_TOOLS.forEach(tool => {
-    if (allText.includes(tool)) {
+    if (containsWord(allText, tool)) {
       flags.push({
         level: 'yellow',
         message: `Edited with ${tool}`
@@ -228,8 +230,8 @@ function runFlagChecks(flatExif, img) {
   });
 
   // Timestamp flags
-  const dateTimeOriginal = flatExif['IFD0.DateTimeOriginal'] || flatExif['Exif.DateTimeOriginal'];
-  const dateTime = flatExif['IFD0.DateTime'] || flatExif['Image.DateTime'];
+  const dateTimeOriginal = flatExif['exif.DateTimeOriginal'];
+  const dateTime = flatExif['exif.DateTime'];
 
   if (dateTimeOriginal && dateTime) {
     const dtOrig = new Date(dateTimeOriginal);
@@ -249,11 +251,11 @@ function runFlagChecks(flatExif, img) {
     });
   }
 
-  // GPS flags
-  const gpsLat = flatExif['GPS.GPSLatitude'];
-  const gpsLon = flatExif['GPS.GPSLongitude'];
+  // GPS flags — read directly from the precomputed numeric 'gps' group, not flatExif
+  const gpsLat = exifData.gps?.Latitude;
+  const gpsLon = exifData.gps?.Longitude;
 
-  if (gpsLat && gpsLon) {
+  if (typeof gpsLat === 'number' && typeof gpsLon === 'number') {
     if (gpsLat === 0 && gpsLon === 0) {
       flags.push({
         level: 'red',
@@ -268,8 +270,8 @@ function runFlagChecks(flatExif, img) {
   }
 
   // Missing device info
-  const make = flatExif['IFD0.Make'] || flatExif['Image.Make'];
-  const model = flatExif['IFD0.Model'] || flatExif['Image.Model'];
+  const make = flatExif['exif.Make'];
+  const model = flatExif['exif.Model'];
 
   if (!make || !model) {
     flags.push({
@@ -278,9 +280,19 @@ function runFlagChecks(flatExif, img) {
     });
   }
 
+  // EXIF-vs-actual dimension mismatch — signals cropping/resizing after metadata was written
+  const exifWidth = flatExif['exif.PixelXDimension'];
+  const exifHeight = flatExif['exif.PixelYDimension'];
+  if (exifWidth && exifHeight && img.bitmap &&
+      (Number(exifWidth) !== img.bitmap.width || Number(exifHeight) !== img.bitmap.height)) {
+    flags.push({
+      level: 'yellow',
+      message: `EXIF dimensions (${exifWidth}×${exifHeight}) differ from actual image (${img.bitmap.width}×${img.bitmap.height}) — possible crop/resize after metadata was written`
+    });
+  }
+
   // Thumbnail
-  const hasThumbnail = flatExif['IFD1'] && Object.keys(flatExif).some(k => k.includes('Thumbnail'));
-  if (hasThumbnail) {
+  if (exifData.Thumbnail?.base64 || exifData.Thumbnail?.image) {
     flags.push({
       level: 'yellow',
       message: 'Embedded thumbnail found — may differ from current image'
@@ -288,23 +300,5 @@ function runFlagChecks(flatExif, img) {
   }
 
   return flags;
-}
-
-function extractThumbnail(exifData) {
-  // Try to extract JPEG thumbnail from IFD1
-  if (exifData.IFD1 && exifData.IFD1.JpegInterchangeFormat && exifData.IFD1.JpegInterchangeFormatLength) {
-    try {
-      const offset = exifData.IFD1.JpegInterchangeFormat.value || 0;
-      const length = exifData.IFD1.JpegInterchangeFormatLength.value || 0;
-      if (offset > 0 && length > 0) {
-        const thumbData = img.arrayBuffer.slice(offset, offset + length);
-        const blob = new Blob([thumbData], { type: 'image/jpeg' });
-        return URL.createObjectURL(blob);
-      }
-    } catch (e) {
-      console.warn('Could not extract thumbnail:', e);
-    }
-  }
-  return null;
 }
 

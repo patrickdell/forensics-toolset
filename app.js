@@ -22,13 +22,19 @@ export const results = {
 };
 
 // ── ExifReader cache (avoid parsing arrayBuffer twice per image) ──────────────
+// ExifReader.load() is SYNCHRONOUS when called with an ArrayBuffer (no async/file-path
+// input) — it returns the tags object directly, not a Promise. Callers still `await`
+// this function, which is harmless (await on a non-Promise resolves immediately).
 /* global ExifReader */
 let _exifCache = null;
 export function getExifData() {
   if (!_exifCache) {
-    _exifCache = ExifReader.load(img.arrayBuffer, { expanded: true })
-      .then(d => d || {})
-      .catch(() => ({}));
+    try {
+      _exifCache = ExifReader.load(img.arrayBuffer, { expanded: true }) || {};
+    } catch (e) {
+      console.error('ExifReader parse failed:', e);
+      _exifCache = {};
+    }
   }
   return _exifCache;
 }

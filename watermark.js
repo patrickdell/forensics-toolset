@@ -14,7 +14,7 @@
  */
 
 import { img, results, getExifData } from './app.js';
-import { escapeHtml } from './utils.js';
+import { escapeHtml, flattenExif } from './utils.js';
 
 // ── IPTC cv.iptc.org/newscodes/digitalsourcetype/ → label + severity ──────────
 const DST_MAP = {
@@ -224,21 +224,4 @@ function card(sev, title, verdict, detail) {
     <p class="watermark-card-body">${detail}</p>
   `;
   return el;
-}
-
-/** Flatten ExifReader's nested output into a dot-path key/value map. */
-function flattenExif(obj) {
-  const flat = {};
-  function walk(o, prefix) {
-    Object.entries(o || {}).forEach(([k, v]) => {
-      const key = prefix ? `${prefix}.${k}` : k;
-      if (v && typeof v === 'object' && !Array.isArray(v) && !(v instanceof Blob)) {
-        walk(v, key);
-      } else if (v != null) {
-        flat[key] = v;
-      }
-    });
-  }
-  walk(obj, '');
-  return flat;
 }

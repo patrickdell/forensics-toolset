@@ -71,6 +71,13 @@ async function runCloneDetection(scaleDown) {
       scale = 0.5;
     }
 
+    if (srcW < 16 || srcH < 16) {
+      progressWrap.style.display = 'none';
+      analyseBtn.disabled = false;
+      showCloneError('Image is too small for clone detection (minimum 16×16px after any scaling applied).');
+      return;
+    }
+
     const tmp = document.createElement('canvas');
     tmp.width  = srcW;
     tmp.height = srcH;

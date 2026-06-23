@@ -3,7 +3,7 @@
  */
 
 import { img, results } from './app.js';
-import { setActiveChip, debounce } from './utils.js';
+import { setActiveChip, debounce, falseColorLUT } from './utils.js';
 
 let currentELA = null;
 let elaQuality = 75;
@@ -83,7 +83,7 @@ async function runELA() {
     const r = Math.abs(origData[i]     - resaveData[i])     * elaAmplification;
     const g = Math.abs(origData[i + 1] - resaveData[i + 1]) * elaAmplification;
     const b = Math.abs(origData[i + 2] - resaveData[i + 2]) * elaAmplification;
-    const [fr, fg, fb] = falseColor((r + g + b) / 3);
+    const [fr, fg, fb] = falseColorLUT((r + g + b) / 3);
     diffData[i]     = fr;
     diffData[i + 1] = fg;
     diffData[i + 2] = fb;
@@ -99,21 +99,6 @@ async function runELA() {
   results.ela = { quality: elaQuality, amplification: elaAmplification, canvas: null };
 
   renderELACanvas();
-}
-
-function falseColor(intensity) {
-  // 0 → dark blue (#0f1f4f), 50 → green (#3ecf8e), 150 → yellow (#f5a623), 255+ → red (#ff5f5f)
-  const c = Math.min(255, Math.max(0, intensity));
-  if (c < 50) {
-    const t = c / 50;
-    return [Math.round(15 + 47 * t), Math.round(31 + 176 * t), Math.round(79 + 63 * t)];
-  }
-  if (c < 150) {
-    const t = (c - 50) / 100;
-    return [Math.round(62 + 183 * t), Math.round(207 - 41 * t), Math.round(142 - 107 * t)];
-  }
-  const t = (c - 150) / 105;
-  return [Math.round(245 + 10 * t), Math.round(166 - 71 * t), Math.round(35 + 60 * t)];
 }
 
 function renderELACanvas() {

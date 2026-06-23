@@ -4,7 +4,7 @@
  */
 
 import { img, results } from './app.js';
-import { setProgress, debounce } from './utils.js';
+import { setProgress, debounce, setActiveChip, falseColorLUT } from './utils.js';
 
 let noiseAmplification = 3;
 
@@ -17,9 +17,7 @@ export function initNoise() {
     chip.classList.toggle('active', amp === noiseAmplification);
     chip.addEventListener('click', () => {
       noiseAmplification = amp;
-      const container = document.getElementById('noise-amp-chips');
-      container.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-      chip.classList.add('active');
+      setActiveChip(document.getElementById('noise-amp-chips'), chip);
       _debouncedRunNoise();
     });
   });
@@ -129,22 +127,7 @@ async function runNoiseAnalysis() {
     for (let i = 0; i < residuals.length; i++) {
       const residual  = residuals[i];
       const amplified = Math.min(255, residual * noiseAmplification);
-
-      // False-colour LUT: blue (low) → green → yellow → red (high)
-      let r, g, b;
-      if (amplified < 85) {
-        r = 0;
-        g = Math.round((amplified / 85) * 255);
-        b = Math.round((1 - amplified / 85) * 255);
-      } else if (amplified < 170) {
-        r = Math.round(((amplified - 85) / 85) * 255);
-        g = 255;
-        b = 0;
-      } else {
-        r = 255;
-        g = Math.round((1 - (amplified - 170) / 85) * 255);
-        b = 0;
-      }
+      const [r, g, b] = falseColorLUT(amplified);
 
       const idx     = i * 4;
       hdata[idx]     = r;
@@ -156,6 +139,7 @@ async function runNoiseAnalysis() {
     heatCtx.putImageData(heatmapData, 0, 0);
     // Composite heatmap over original using alpha blending via drawImage
     ctx.drawImage(heatCanvas, 0, 0);
+    setProgress(progressBar, progressText, 100, 'Done');
 
     // Store result
     let maxResidual = 0;

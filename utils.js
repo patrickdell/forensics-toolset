@@ -84,3 +84,53 @@ export function debounce(fn, ms = 200) {
     timer = setTimeout(() => fn(...args), ms);
   };
 }
+
+/**
+ * Flatten ExifReader's expanded-mode output into a dot-path key/value map.
+ *
+ * ExifReader's `expanded:true` tags are wrapped as {id, value, description} (EXIF/IPTC)
+ * or {value, attributes, description} (XMP) — a node is a leaf tag once it has a `value`
+ * key, even though `value` itself can be 0 or "". Recursing past that point (the original
+ * bug here) produces useless flattened keys like "exif.Make.value" / "exif.Make.description"
+ * instead of "exif.Make". The precomputed `gps` group (Latitude/Longitude/Altitude) holds
+ * plain numbers, not wrapped tags, and falls through to the leaf branch unchanged.
+ */
+export function flattenExif(exifData) {
+  const flat = {};
+
+  function walk(obj, prefix) {
+    Object.entries(obj || {}).forEach(([key, val]) => {
+      const fullKey = prefix ? `${prefix}.${key}` : key;
+      if (val && typeof val === 'object' && !Array.isArray(val) && !(val instanceof Blob)) {
+        if ('value' in val) {
+          flat[fullKey] = val.description ?? val.value;
+        } else {
+          walk(val, fullKey);
+        }
+      } else if (val !== null && val !== undefined) {
+        flat[fullKey] = val;
+      }
+    });
+  }
+
+  walk(exifData, '');
+  return flat;
+}
+
+/**
+ * False-colour heatmap lookup: blue (low) → green → yellow → red (high).
+ * intensity: 0–255. Returns [r, g, b].
+ */
+export function falseColorLUT(intensity) {
+  const c = Math.min(255, Math.max(0, intensity));
+  if (c < 50) {
+    const t = c / 50;
+    return [Math.round(15 + 47 * t), Math.round(31 + 176 * t), Math.round(79 + 63 * t)];
+  }
+  if (c < 150) {
+    const t = (c - 50) / 100;
+    return [Math.round(62 + 183 * t), Math.round(207 - 41 * t), Math.round(142 - 107 * t)];
+  }
+  const t = (c - 150) / 105;
+  return [Math.round(245 + 10 * t), Math.round(166 - 71 * t), Math.round(35 + 60 * t)];
+}
